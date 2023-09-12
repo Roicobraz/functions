@@ -1,4 +1,18 @@
 <?php
+/* 
+ Fonctions développé pour Wordpress 6.3.1
+ Chaque fonction à pour nomenclature 
+ => function nom(paramètre)
+ 	{ 
+		// version: date dépendance (+ autre dépendance)
+		[...]
+	}
+ dépendances : 
+ 	Bootstrap == Bt
+	Jquery == Jq
+	Fancybox == Fb
+*/
+
 /*--------------------------------------------------*/
 /*		Avoir le lien d'une page via son titre		*/
 /*--------------------------------------------------*/
@@ -41,36 +55,110 @@
 /*----------------------------------------------*/
 /*					Avoir un âge				*/
 /*----------------------------------------------*/
-	function cstm_age($date_created = 0 ){	 
+	function cstm_age($date_created = 0 )
+	{	
+		//	version : 12/09/2023
 		$create = explode( '/', $date_created );
 		$date = array(date("d"),
 					  date("m"),
 					  date("Y"));
 		
-			$ancient=$date[2] - $create[2];
+		$ancient=$date[2] - $create[2];
 
-			if ($date[1] == $create[1]) 
-			{
-				if ($date[0] < $create[0] ) 
-				{
-					$ancient = $ancient - 1;
-				}
-			}
-			else if ($date[1] < $create[1]) 
+		if ($date[1] == $create[1]) 
+		{
+			if ($date[0] < $create[0] ) 
 			{
 				$ancient = $ancient - 1;
 			}
+		}
+		else if ($date[1] < $create[1]) 
+		{
+			$ancient = $ancient - 1;
+		}
 
-			if($ancient == 0):
-			{
-				$ancient = '<1';
-			}
-			endif;
+		if($ancient == 0):
+		{
+			$ancient = '<1';
+		}
+		endif;
 		echo($ancient);
 	}
 
+/*--------------------------------------------------*/
+/*		Compare une date avec la date actuelle		*/
+/*--------------------------------------------------*/
+	function cstm_compare_date($date_opening)
+	{
+		// version: 12/09/2023
+		$close = explode( '/', $date_closing );
+		$newclose = date_i18n("j F", strtotime($date_closing));
+		
+		$open = explode( '/', $date_opening );
+		$newopen = date_i18n("j F", strtotime($date_opening));
 
-	function cstm_decompte($date_created, $format = "" ){	 
+		// Date actuelle
+		$date = array(date("m"), date("d"), date("Y"));
+		
+		$bool = 0;
+
+		// Check if the actual date is under the re-opening {
+		// Date in english format 
+		if( $date[2] > $close[2] ):
+		{
+			$bool = true;
+		}
+		elseif( $date[2] == $close[2] ):
+		{
+			if( $date[0] > $close[0] ):
+			{
+				$bool = true;
+			}
+			elseif( $date[0] == $close[0] ):
+			{
+				if( $date[1] >= $close[1] ):
+				{
+					$bool = true;
+				}
+				endif;
+			}
+			endif;
+		}
+		endif;
+		
+		$begin = $bool;
+		$bool = 0;
+
+		if( $date[2] < $open[2] ):
+		{
+			$bool = true;
+		}
+		elseif( $date[2] == $open[2] ):
+		{
+			if( $date[0] < $open[0] ):
+			{
+				$bool = true;
+			}
+			elseif( $date[0] == $open[0] ):
+			{
+				if( $date[1] <= $open[1] ):
+				{
+					$bool = true;
+				}
+				endif;
+			}
+			endif;
+		}
+		endif;
+		
+		$ending = $bool;
+		return($begin); 
+		return($ending);
+	}
+
+	function cstm_decompte($date_created, $format = "" )
+	{
+		//	version : 12/09/2023
 		$create = explode( '/', $date_created );
 		$date = array(date("d"),
 					  date("m"),
@@ -177,7 +265,9 @@
 /*----------------------------------------------*/
 /*	Avoir un nombre défilant de 0 à n défini	*/
 /*----------------------------------------------*/
-	function cstm_count($count, $id, $classname="animated_counter"){		
+	function cstm_count($count, $id, $classname="animated_counter")
+	{	
+		// version : 12/09/2023	
 		?>
 		<div id="<?= $id ?>" class="<?php $classname ?>"><?= $count ?></div>
 		
@@ -210,7 +300,9 @@
 		<?php
 	}
 
-	function cstm_carousel($repeater, $id = "carouselExample", $buttons, $multi){
+	function cstm_carousel($repeater, $id = "carouselExample", $buttons, $multi)
+	{
+		//	version: 12/09/2023 Bt
 	?>	
 	<div class="container text-center my-3">
     <div class="row mx-auto my-auto justify-content-center">
@@ -338,7 +430,9 @@
 		endif;
 	}
 
-	function cstm_card($title = '', $image = '', $description, $link = '#', $button = '',$test = ''){
+	function cstm_card($title = '', $image = '', $description, $link = '#', $button = '',$test = '')
+	{
+		//	version: 12/09/2023 Bt
 	?>
 		<div class="card">
 			<div class="card__face card__face--front">
@@ -359,13 +453,17 @@
 /*------------------------------------------*/
 /*				Scrollspy					*/
 /*------------------------------------------*/
-	function cstm_scrollspy_start($nav_id = "navbar-example3"){
+	function cstm_scrollspy_start($nav_id = "navbar-example3")
+	{
+		//	version: 12/09/2023 Bt
 		$code_html = 'data-bs-spy="scroll" data-bs-target="#'.$nav_id.'" data-bs-smooth-scroll="true" data-bs-root-margin="0px 0px -50%" class="scrollspy-example-2" tabindex="0"';
 		
 		echo($code_html);
 	}
 
-	function cstm_scrollspy($nav_menu){
+	function cstm_scrollspy($nav_menu)
+	{
+		//	version: 12/09/2023 Bt
 		$blocks = wp_get_nav_menu_items($nav_menu, $nav_id = "navbar-example3");	?>
 		<nav id="<?php echo $nav_id ?>" class="h-100 flex-column align-items-stretch pe-4 border-end">
 			<nav class="nav nav-pills flex-column"> <?php
@@ -404,9 +502,10 @@
 /*		Changer le logo de la page wp-login		*/
 /*----------------------------------------------*/
 /* À retravailler */
-	function my_login_logo() { 
-
-	$mobile_themecolor = get_theme_mod( 'mobile_themecolor' );
+	function cstm_my_login_logo() 
+	{ 
+		//	version : 12/09/2023
+		$mobile_themecolor = get_theme_mod( 'mobile_themecolor' );
 
 	?>
 		<?php if (get_theme_mod( 'custom_logo' )){ ?>
@@ -451,10 +550,184 @@
 		<?php } ?>
 
 	<?php }
-	add_action( 'login_enqueue_scripts', 'my_login_logo' );
+	add_action( 'login_enqueue_scripts', 'cstm_my_login_logo' );
 
+/*----------------------------------------------*/
+/*			Modal de Fermeture Fancybox			*/
+/*----------------------------------------------*/
+	function cstm_modal_closing()
+	{
+		// version: 12/09/2023 Fb + cstm_compare_date()
+	 ?>
+		<script type="text/javascript">
+	<?php 
+		if (get_field('display-date', 'option')):
+		{
+		$date_closing = get_field('closing-date' , 'option');
+		$close = explode( '/', $date_closing );
+		$newclose = date_i18n("j F", strtotime(get_field('closing-date' , 'option')));
 
- 
+		// Date actuelle
+		$date = array(date("m"), date("d"), date("Y"));
+		$bool_opening = false;
+		$bool_closing = false;
+		$before = false;
+		$after = false;
 
-?>
+		$test ="";
+
+		if (!empty(get_field('opening-date', 'option'))):
+		{
+			$date_opening = get_field('opening-date' , 'option');
+			$open = explode( '/', $date_opening );
+			$newopen = date_i18n("j F", strtotime(get_field('opening-date' , 'option')));
+
+	// Check if the actual date is under the re-opening {
+			// Date in english format 
+			cstm_compare_date($close);
+			if( $date[2] > $close[2] ):
+			{
+				$bool_closing = true;
+			}
+			elseif( $date[2] == $close[2] ):
+			{
+				if( $date[0] > $close[0] ):
+				{
+					$bool_closing = true;
+				}
+				elseif( $date[0] == $close[0] ):
+				{
+					if( $date[1] >= $close[1] ):
+					{
+						$bool_closing = true;
+					}
+					endif;
+				}
+				endif;
+			}
+			endif;
+
+			if( $date[2] < $open[2] ):
+			{
+				$bool_opening = true;
+			}
+			elseif( $date[2] == $open[2] ):
+			{
+				if( $date[0] < $open[0] ):
+				{
+					$bool_opening = true;
+				}
+				elseif( $date[0] == $open[0] ):
+				{
+					if( $date[1] <= $open[1] ):
+					{
+						$bool_opening = true;
+					}
+					endif;
+				}
+				endif;
+			}
+			endif;
+	/*}*/
+
+	// Check if the actual date is above the closing {
+			if($close[1] - 7 <= 0):
+			{
+				$week = 30 + ($close[1] - 7);
+				$month = $close[0] - 1;
+
+				if( $month <= 0 ):
+				{
+					$year = $close[2] - 1;
+					$month = 12;
+				}
+				else:
+				{
+					$year = $close[2];
+				}
+				endif;
+			}
+			else:
+			{
+				$week = $close[1] - 7;
+				$month = $close[0];
+				$year = $close[2];
+			}
+			endif;
+	/*}*/
+
+	// Check if the actual date is between closing and (closing - 7) {
+			if( $date[2] > $year ):
+			{
+				$before = true;
+			}
+			elseif( $date[2] == $year ):
+			{
+				if( $date[0] > $month ):
+				{
+					$before = true;
+				}
+				elseif( $date[0] == $month ):
+				{
+					if( $date[1] >= $week ):
+					{
+						$before = true;
+					}
+					endif;
+				}
+				endif;
+			}
+			endif;
+
+			if( $date[2] < $close[2] ):
+			{
+				$after = true;
+			}
+			elseif( $date[2] == $close[2] ):
+			{
+				if( $date[0] < $close[0] ):
+				{
+					$after = true;
+				}
+				elseif( $date[0] == $close[0] ):
+				{
+					if( $date[1] <= $close[1] ):
+					{
+						$after = true;
+					}
+					endif;
+				}
+				endif;
+			}
+			endif; 
+	/*}*/
+		}
+		else:
+		{
+			$newopen = '';
+		}
+		endif;
+
+		if ( ($bool_opening && $bool_closing) || ($before && $after)):
+			{
+				$closingdescription = get_field('closing-description', 'option');
+				$closingimage = get_field('closing-image', 'option');	
+				if($closingimage):
+				{
+					$closingimage='<img src="'.$closingimage.'" class="img-fluid">';
+				}
+				endif;
+				?>
+				$( document ).ready(function()
+				{
+					$.fancybox.open('<div class="message" style="max-width:600px;"><h3 class="text-center" style="font-weight:500"><?php if(get_field('type-closing', 'option')==1):{echo (the_field('titre', 'option'));}else:{echo (the_field('entreprise', 'option'));if($after):{echo(' sera ');}else:{echo(' est ');}endif;if(get_field('type-closing', 'option')==2):{echo'en congés ';}elseif(get_field('type-closing', 'option')==3):{echo'exceptionnellement fermé ';}endif;?><strong><?php if(!empty(get_field('opening-date', 'option'))):{?> du <?php }else:{?> le <?php }endif;echo $newclose;if(!empty(get_field('opening-date', 'option'))):{?> au <?php echo $newopen;}endif; if(get_field('inclus', 'option')):{ echo('  inclus');}endif;}endif;?></strong></h3><div class="text-center"><?php echo get_field('closing-description', 'option') ?></div><?php if(!empty(get_field('closing-image', 'option'))):{echo("<img src=".get_field('closing-image', 'option').">");}endif;?></div>');
+				});	
+
+	<?php 	}
+			endif;
+		}
+		endif;?>
+		</script>	
+	<?php
+	}
 
