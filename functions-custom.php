@@ -16,9 +16,9 @@
 /*--------------------------------------------------*/
 /*		Avoir le lien d'une page via son titre		*/
 /*--------------------------------------------------*/
-	function cstm_get_permalink($title, $classname = "", $target = 0, $posts_per_page = 1, $post_type = "page")
+	function cstm_get_permalink($title, $classname = "", $content = '', $target = 0, $posts_per_page = 1, $post_type = "page")
 	{
-		//	version : 12/09/2023
+		//	version : 13/09/2023
 		if(is_int($title)):
 		{
 			$query = new WP_Query(array('post_type' => $post_type,'posts_per_page' => $posts_per_page,'p'  => $title));
@@ -28,6 +28,7 @@
 			$query = new WP_Query(array('post_type' => $post_type,'posts_per_page' => $posts_per_page,'s'  => $title));
 		}
 		endif;
+		
 		if ($target == 1):
 		{
 			$blank = 'target="_blank"';
@@ -37,13 +38,20 @@
 			$blank = '';
 		}
 		endif;
+		
+		
 		$site_info = '';
 		if ( $query ) :
 		{
 			while ( $query->have_posts() ):
 			{
 				$query->the_post();
-				$site_info .= '<a class="'.$classname.'" '.$blank.' href="'.get_permalink().'">'.get_the_title().'</a>';
+				if(empty($content)):
+				{
+					$content = get_the_title();
+				}
+				endif;
+				$site_info .= '<a class="'.$classname.'" '.$blank.' href="'.get_permalink().'">'.$content.'</a>';
 			}
 			endwhile;
 		}
@@ -84,6 +92,7 @@
 		endif;
 		echo($ancient);
 	}
+
 
 /*--------------------------------------------------*/
 /*		Compare une date avec la date actuelle		*/
@@ -156,6 +165,10 @@
 		return($ending);
 	}
 
+
+/*----------------------------------------------*/
+/*	Fait un décompte avec défilement des nombre	*/
+/*----------------------------------------------*/
 	function cstm_decompte($date_created, $format = "" )
 	{
 		//	version : 12/09/2023
@@ -300,6 +313,10 @@
 		<?php
 	}
 
+
+/*----------------------------------------------*/
+/*					Carousel					*/
+/*----------------------------------------------*/
 	function cstm_carousel($repeater, $id = "carouselExample", $buttons, $multi)
 	{
 		//	version: 12/09/2023 Bt
@@ -430,6 +447,10 @@
 		endif;
 	}
 
+
+/*------------------------------------------*/
+/*					Card					*/
+/*------------------------------------------*/
 	function cstm_card($title = '', $image = '', $description, $link = '#', $button = '',$test = '')
 	{
 		//	version: 12/09/2023 Bt
