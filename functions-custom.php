@@ -99,70 +99,34 @@
 /*--------------------------------------------------*/
 	function cstm_compare_date($date_opening)
 	{
-		// version: 12/09/2023
-		$close = explode( '/', $date_closing );
-		$newclose = date_i18n("j F", strtotime($date_closing));
+		// version: 19/09/2023
 		
-		$open = explode( '/', $date_opening );
-		$newopen = date_i18n("j F", strtotime($date_opening));
-
-		// Date actuelle
-		$date = array(date("m"), date("d"), date("Y"));
+		// Date d'aujourd'hui
+		$date_today = date("m/d/Y");
+		$date_today = strtotime($date_today);
+		// Date du début de l'évenement
+		$date_closing = get_field('closing-date' , 'option');
+		$datebefore = strtotime($date_closing);
+		$newclose = date_i18n("j F", $datebefore);
 		
-		$bool = 0;
-
-		// Check if the actual date is under the re-opening {
-		// Date in english format 
-		if( $date[2] > $close[2] ):
+		// Date 7 jours avant l'évènement
+		$date_today_7 = strtotime($date_closing.'- 7 days');
+		
+		// Date de fin de l'évènement
+		$date_opening = get_field('opening-date' , 'option');
+		$dateafter = strtotime($date_opening);	
+		$newopen = date_i18n("j F", $dateafter);
+		
+		// Calcul des dates
+		$event = $datebefore <= $date_today && $date_today <= $dateafter;
+		$beforeevent = $date_today_7 <= $date_today && $date_today <= $datebefore;
+				
+		if ( $beforeevent || $event):
 		{
-			$bool = true;
-		}
-		elseif( $date[2] == $close[2] ):
-		{
-			if( $date[0] > $close[0] ):
-			{
-				$bool = true;
-			}
-			elseif( $date[0] == $close[0] ):
-			{
-				if( $date[1] >= $close[1] ):
-				{
-					$bool = true;
-				}
-				endif;
-			}
-			endif;
+			return($newclose);
+			return($newopen);
 		}
 		endif;
-		
-		$begin = $bool;
-		$bool = 0;
-
-		if( $date[2] < $open[2] ):
-		{
-			$bool = true;
-		}
-		elseif( $date[2] == $open[2] ):
-		{
-			if( $date[0] < $open[0] ):
-			{
-				$bool = true;
-			}
-			elseif( $date[0] == $open[0] ):
-			{
-				if( $date[1] <= $open[1] ):
-				{
-					$bool = true;
-				}
-				endif;
-			}
-			endif;
-		}
-		endif;
-		
-		$ending = $bool;
-		return($begin); 
-		return($ending);
 	}
 
 
@@ -578,177 +542,100 @@
 /*----------------------------------------------*/
 	function cstm_modal_closing()
 	{
-		// version: 12/09/2023 Fb + cstm_compare_date()
+		// version: 19/09/2023 Fb
 	 ?>
 		<script type="text/javascript">
-	<?php 
-		if (get_field('display-date', 'option')):
+
+<?php  
+	if (get_field('display-date', 'option')):
+	{
+		$closingdescription = get_field('closing-description', 'option');
+		$closingimage = get_field('closing-image', 'option');	
+		
+		if($closingimage):
 		{
+			$closingimage='<img src="'.$closingimage.'" class="img-fluid">';
+		}
+		endif;
+		
+		// Date d'aujourd'hui
+		$date_today = date("m/d/Y");
+		$date_today = strtotime($date_today);
+		
+		// Date du début de l'évenement
 		$date_closing = get_field('closing-date' , 'option');
-		$close = explode( '/', $date_closing );
-		$newclose = date_i18n("j F", strtotime(get_field('closing-date' , 'option')));
+		$datebefore = strtotime($date_closing);
+		$newclose = date_i18n("j F", $datebefore);
 
-		// Date actuelle
-		$date = array(date("m"), date("d"), date("Y"));
-		$bool_opening = false;
-		$bool_closing = false;
-		$before = false;
-		$after = false;
-
-		$test ="";
-
+		// Date 7 jours avant l'évènement
+		$date_today_7 = strtotime($date_closing.'- 7 days');
+		
 		if (!empty(get_field('opening-date', 'option'))):
 		{
+			// Date de fin de l'évènement
 			$date_opening = get_field('opening-date' , 'option');
-			$open = explode( '/', $date_opening );
-			$newopen = date_i18n("j F", strtotime(get_field('opening-date' , 'option')));
-
-	// Check if the actual date is under the re-opening {
-			// Date in english format 
-			cstm_compare_date($close);
-			if( $date[2] > $close[2] ):
-			{
-				$bool_closing = true;
-			}
-			elseif( $date[2] == $close[2] ):
-			{
-				if( $date[0] > $close[0] ):
-				{
-					$bool_closing = true;
-				}
-				elseif( $date[0] == $close[0] ):
-				{
-					if( $date[1] >= $close[1] ):
-					{
-						$bool_closing = true;
-					}
-					endif;
-				}
-				endif;
-			}
-			endif;
-
-			if( $date[2] < $open[2] ):
-			{
-				$bool_opening = true;
-			}
-			elseif( $date[2] == $open[2] ):
-			{
-				if( $date[0] < $open[0] ):
-				{
-					$bool_opening = true;
-				}
-				elseif( $date[0] == $open[0] ):
-				{
-					if( $date[1] <= $open[1] ):
-					{
-						$bool_opening = true;
-					}
-					endif;
-				}
-				endif;
-			}
-			endif;
-	/*}*/
-
-	// Check if the actual date is above the closing {
-			if($close[1] - 7 <= 0):
-			{
-				$week = 30 + ($close[1] - 7);
-				$month = $close[0] - 1;
-
-				if( $month <= 0 ):
-				{
-					$year = $close[2] - 1;
-					$month = 12;
-				}
-				else:
-				{
-					$year = $close[2];
-				}
-				endif;
-			}
-			else:
-			{
-				$week = $close[1] - 7;
-				$month = $close[0];
-				$year = $close[2];
-			}
-			endif;
-	/*}*/
-
-	// Check if the actual date is between closing and (closing - 7) {
-			if( $date[2] > $year ):
-			{
-				$before = true;
-			}
-			elseif( $date[2] == $year ):
-			{
-				if( $date[0] > $month ):
-				{
-					$before = true;
-				}
-				elseif( $date[0] == $month ):
-				{
-					if( $date[1] >= $week ):
-					{
-						$before = true;
-					}
-					endif;
-				}
-				endif;
-			}
-			endif;
-
-			if( $date[2] < $close[2] ):
-			{
-				$after = true;
-			}
-			elseif( $date[2] == $close[2] ):
-			{
-				if( $date[0] < $close[0] ):
-				{
-					$after = true;
-				}
-				elseif( $date[0] == $close[0] ):
-				{
-					if( $date[1] <= $close[1] ):
-					{
-						$after = true;
-					}
-					endif;
-				}
-				endif;
-			}
-			endif; 
-	/*}*/
+			$dateafter = strtotime($date_opening);	
+			$newopen = date_i18n("j F", $dateafter);
 		}
 		else:
 		{
 			$newopen = '';
 		}
 		endif;
-
-		if ( ($bool_opening && $bool_closing) || ($before && $after)):
-			{
-				$closingdescription = get_field('closing-description', 'option');
-				$closingimage = get_field('closing-image', 'option');	
-				if($closingimage):
-				{
-					$closingimage='<img src="'.$closingimage.'" class="img-fluid">';
-				}
-				endif;
-				?>
-				$( document ).ready(function()
-				{
-					$.fancybox.open('<div class="message" style="max-width:600px;"><h3 class="text-center" style="font-weight:500"><?php if(get_field('type-closing', 'option')==1):{echo (the_field('titre', 'option'));}else:{echo (the_field('entreprise', 'option'));if($after):{echo(' sera ');}else:{echo(' est ');}endif;if(get_field('type-closing', 'option')==2):{echo'en congés ';}elseif(get_field('type-closing', 'option')==3):{echo'exceptionnellement fermé ';}endif;?><strong><?php if(!empty(get_field('opening-date', 'option'))):{?> du <?php }else:{?> le <?php }endif;echo $newclose;if(!empty(get_field('opening-date', 'option'))):{?> au <?php echo $newopen;}endif; if(get_field('inclus', 'option')):{ echo('  inclus');}endif;}endif;?></strong></h3><div class="text-center"><?php echo get_field('closing-description', 'option') ?></div><?php if(!empty(get_field('closing-image', 'option'))):{echo("<img src=".get_field('closing-image', 'option').">");}endif;?></div>');
-				});	
-
-	<?php 	}
-			endif;
+		
+		// Calcul des dates
+		$event = $datebefore <= $date_today && $date_today <= $dateafter;
+		$beforeevent = $date_today_7 <= $date_today && $date_today <= $datebefore;
+		
+		// Texte de la Fancybox
+		$code_html = '';
+		
+		if(get_field('type-closing', 'option')==1):
+		{
+			$code_html .= get_field('titre', 'option');
 		}
-		endif;?>
-		</script>	
+		else:
+		{
+			$code_html .= get_field('entreprise', 'option');
+			
+			if($beforeevent):{$code_html .= ' sera ';}else:{$code_html .= ' est ';}endif;
+			
+			if(get_field('type-closing', 'option')==2):{$code_html .= 'en congés ';}elseif(get_field('type-closing', 'option')==3):{$code_html .= 'exceptionnellement fermé ';}endif;
+			
+			$code_html .= '<strong>' ;
+			
+			if(!empty(get_field('opening-date', 'option'))):{$code_html .= ' du ';}else:{$code_html .= ' le ';}endif;
+			
+			$code_html .=  $newclose;
+			
+			if(!empty(get_field('opening-date', 'option'))):{$code_html .= ' au '.$newopen;}endif;
+			
+			if(get_field('inclus', 'option') && !empty(get_field('opening-date', 'option'))):{$code_html .= '  inclus';}endif;
+		}
+		endif;
+		
+		$code_html .= '</strong></h3><div class="text-center">'.get_field('closing-description', 'option').'</div>';
+	 
+		if(!empty(get_field('closing-image', 'option'))):
+		{
+			$code_html .= ("<img src=".get_field('closing-image', 'option').">");
+		}
+		endif;
+
+		if ( $beforeevent || $event):
+		{
+			?>
+			$( document ).ready(function()
+			{
+				$.fancybox.open('<div class="message" style="max-width:600px;"><h3 class="text-center" style="font-weight:500"><?php echo($code_html);?></div>');
+			});	
+		<?php
+		}
+		endif;
+	}
+	endif;
+	?>
+</script>	
 	<?php
 	}
 
