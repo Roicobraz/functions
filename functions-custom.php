@@ -1,6 +1,6 @@
 <?php
 /* 
- Fonctions développé pour Wordpress 6.3.1
+ Fonctions développé sous Wordpress 6.3.1
  Chaque fonction à pour nomenclature 
  => function nom(paramètre)
  	{ 
@@ -13,6 +13,7 @@
 	Fancybox == Fb
 */
 
+/* Admin Wordpress {*/
 /*--------------------------------------------------*/
 /*		Avoir le lien d'une page via son titre		*/
 /*--------------------------------------------------*/
@@ -59,6 +60,125 @@
 		echo($site_info);
 	}
 
+/*----------------------------------------------*/
+/*		Changer le logo de la page wp-login		*/
+/*----------------------------------------------*/
+/* À retravailler */
+	function cstm_my_login_logo() 
+	{ 
+		//	version : 12/09/2023
+		$mobile_themecolor = get_theme_mod( 'mobile_themecolor' );
+
+	?>
+		<?php if (get_theme_mod( 'custom_logo' )){ ?>
+
+		<style type="text/css">
+
+		body.login div#login h1 a { 
+
+		<?php 
+				$themes_mod = array(get_theme_mod('custom_logo'),get_theme_mod('custom_logo_icon'),get_theme_mod('custom_logo_text'),);
+
+				/* GESTION DES VERSION LIGHT ------------------------------- */
+				if (get_theme_mod('navbarlogo_color') == 'light') 
+				{
+					foreach($themes_mod as $theme_mod):
+					{
+						if($theme_mod):
+						{
+							$custom_logo_parts = pathinfo($theme_mod);
+							$custom_logo_light  = $custom_logo_parts['dirname'].'/'.$custom_logo_parts['filename'].'-light.'.$custom_logo_parts['extension'];
+							$logo = $custom_logo_light;	
+						}
+						endif;
+					}
+					endforeach;
+				}
+				else
+				{
+					$logo = $custom_logo;	
+				}	
+
+
+		?>		
+		background-image: url(<?php echo $logo;?>);
+		background-size: 100% auto; width:auto;}
+		.login h1 a { height:200px !important; margin-bottom:0}
+
+		html, body, .wp-dialog { background-color: <?php echo $mobile_themecolor;?> !important;}
+		.login form { box-shadow: 0 0 5px 1px rgba(100, 100, 100, 0.3) !important;}
+		.login #backtoblog a, .login #nav a { color:#fff !important;}
+		</style>
+		<?php } ?>
+
+	<?php }
+	add_action( 'login_enqueue_scripts', 'cstm_my_login_logo' );
+
+/*------------------------------------------*/
+/*	Longueur maximum des extraits (en mots)	*/
+/*------------------------------------------*/
+	function my_excerpt_length(){ return 15; } add_filter('excerpt_length', 'my_excerpt_length');
+
+/*--------------------------------------------------------------*/
+/*	Mets en brouillon tout les articles ayant leur date dépassé	*/
+/*--------------------------------------------------------------*/
+	function cstm_pubdraft($args)
+	{
+		//	version : 20/09/2023
+		$date_begin	= $args['date_begin'];
+		$date_end	= $args['date_end'];
+		$content	= $args['content'];
+		$draft		= $args['draft'];
+		$duree_event= $args['one_day'];
+		
+		// Date d'aujourd'hui
+		$date_today = date("m/d/Y");
+		$date_today = strtotime($date_today);
+		
+		// Date du début de l'évenement
+		$datebefore = strtotime($date_begin);
+		$date = date_i18n("j F", $datebefore);
+
+		// Date de fin de l'évènement
+		$dateafter = strtotime($date_end);
+		$date_f = date_i18n("j F", $dateafter);
+
+		// Calcul des dates
+		$publish = $datebefore <= $date_today && $date_today <= $dateafter;
+
+		if($publish || $duree_event):
+		{
+			echo $content;
+		}
+		else:
+		{	
+			$post = array( 'ID' => get_the_id(), 'post_status' => 'draft' );
+			wp_update_post($post);
+		}
+		endif;
+	}
+
+ /*---------------------------------------------------------------------------------------------∖
+|	À travailler																				|
+|	Objectif : mettre dans une catégorie la publication une fois sa date dépassé				|
+ ∖---------------------------------------------------------------------------------------------*/
+	function cstm_pubcategory()
+	{
+		if(term_exists('test'))
+		{
+			$id_cat = wp_get_post_terms();
+			
+			$jsp = array(
+				'ID' 			=> get_the_id(),
+				'post_category' => $id_cat
+			);
+			
+			wp_update_post($jsp);
+			print_r($id_cat);
+		}
+	}
+/*}*/
+
 
 /*----------------------------------------------*/
 /*					Avoir un âge				*/
@@ -93,7 +213,6 @@
 		echo($ancient);
 	}
 
-
 /*--------------------------------------------------*/
 /*		Compare une date avec la date actuelle		*/
 /*--------------------------------------------------*/
@@ -109,9 +228,6 @@
 		$datebefore = strtotime($date_closing);
 		$newclose = date_i18n("j F", $datebefore);
 		
-		// Date 7 jours avant l'évènement
-		$date_today_7 = strtotime($date_closing.'- 7 days');
-		
 		// Date de fin de l'évènement
 		$date_opening = get_field('opening-date' , 'option');
 		$dateafter = strtotime($date_opening);	
@@ -123,12 +239,113 @@
 				
 		if ( $beforeevent || $event):
 		{
-			return($newclose);
-			return($newopen);
+			return($event);
+			return($beforeevent);
 		}
 		endif;
 	}
 
+/*----------------------------------------------*/
+/*			Modal de Fermeture Fancybox			*/
+/*----------------------------------------------*/
+	function cstm_modal_closing()
+	{
+		// version: 19/09/2023 Fb
+	 ?>
+		<script type="text/javascript">
+
+<?php  
+	if (get_field('display-date', 'option')):
+	{
+		$closingdescription = get_field('closing-description', 'option');
+		$closingimage = get_field('closing-image', 'option');	
+		
+		if($closingimage):
+		{
+			$closingimage='<img src="'.$closingimage.'" class="img-fluid">';
+		}
+		endif;
+		
+		// Date d'aujourd'hui
+		$date_today = date("m/d/Y");
+		$date_today = strtotime($date_today);
+		
+		// Date du début de l'évenement
+		$date_closing = get_field('closing-date' , 'option');
+		$datebefore = strtotime($date_closing);
+		$newclose = date_i18n("j F", $datebefore);
+
+		// Date 7 jours avant l'évènement
+		$date_today_7 = strtotime($date_closing.'- 7 days');
+		
+		if (!empty(get_field('opening-date', 'option'))):
+		{
+			// Date de fin de l'évènement
+			$date_opening = get_field('opening-date' , 'option');
+			$dateafter = strtotime($date_opening);	
+			$newopen = date_i18n("j F", $dateafter);
+		}
+		else:
+		{
+			$newopen = '';
+		}
+		endif;
+		
+		// Calcul des dates
+		$event = $datebefore <= $date_today && $date_today <= $dateafter;
+		$beforeevent = $date_today_7 <= $date_today && $date_today <= $datebefore;
+		
+		// Texte de la Fancybox
+		$code_html = '';
+		
+		if(get_field('type-closing', 'option')==1):
+		{
+			$code_html .= get_field('titre', 'option');
+		}
+		else:
+		{
+			$code_html .= get_field('entreprise', 'option');
+			
+			if($beforeevent):{$code_html .= ' sera ';}else:{$code_html .= ' est ';}endif;
+			
+			if(get_field('type-closing', 'option')==2):{$code_html .= 'en congés ';}elseif(get_field('type-closing', 'option')==3):{$code_html .= 'exceptionnellement fermé ';}endif;
+			
+			$code_html .= '<strong>' ;
+			
+			if(!empty(get_field('opening-date', 'option'))):{$code_html .= ' du ';}else:{$code_html .= ' le ';}endif;
+			
+			$code_html .=  $newclose;
+			
+			if(!empty(get_field('opening-date', 'option'))):{$code_html .= ' au '.$newopen;}endif;
+			
+			if(get_field('inclus', 'option') && !empty(get_field('opening-date', 'option'))):{$code_html .= '  inclus';}endif;
+		}
+		endif;
+		
+		$code_html .= '</strong></h3><div class="text-center">'.get_field('closing-description', 'option').'</div>';
+	 
+		if(!empty(get_field('closing-image', 'option'))):
+		{
+			$code_html .= ("<img src=".get_field('closing-image', 'option').">");
+		}
+		endif;
+
+		if ( $beforeevent || $event):
+		{
+			?>
+			$( document ).ready(function()
+			{
+				$.fancybox.open('<div class="message" style="max-width:600px;"><h3 class="text-center" style="font-weight:500"><?php echo($code_html);?></div>');
+			});	
+		<?php
+		}
+		endif;
+	}
+	endif;
+	?>
+</script>	
+	<?php
+	}
 
 /*----------------------------------------------*/
 /*	Fait un décompte avec défilement des nombre	*/
@@ -238,7 +455,6 @@
 		endif;		
 	}
 
-
 /*----------------------------------------------*/
 /*	Avoir un nombre défilant de 0 à n défini	*/
 /*----------------------------------------------*/
@@ -272,12 +488,11 @@
 
 			var obj = document.getElementById("<?= $id ?>");
 			animateValue(obj, 0, <?php echo $count ?>, 5000);		
-		</script>
-				
+		</script>	
 		<?php
 	}
 
-
+/* Dépendance Bootstrap {
 /*----------------------------------------------*/
 /*					Carousel					*/
 /*----------------------------------------------*/
@@ -481,161 +696,4 @@
 		</style>
 				<?php
 	}
-
-
-/*----------------------------------------------*/
-/*		Changer le logo de la page wp-login		*/
-/*----------------------------------------------*/
-/* À retravailler */
-	function cstm_my_login_logo() 
-	{ 
-		//	version : 12/09/2023
-		$mobile_themecolor = get_theme_mod( 'mobile_themecolor' );
-
-	?>
-		<?php if (get_theme_mod( 'custom_logo' )){ ?>
-
-		<style type="text/css">
-
-		body.login div#login h1 a { 
-
-		<?php 
-				$themes_mod = array(get_theme_mod('custom_logo'),get_theme_mod('custom_logo_icon'),get_theme_mod('custom_logo_text'),);
-
-				/* GESTION DES VERSION LIGHT ------------------------------- */
-				if (get_theme_mod('navbarlogo_color') == 'light') 
-				{
-					foreach($themes_mod as $theme_mod):
-					{
-						if($theme_mod):
-						{
-							$custom_logo_parts = pathinfo($theme_mod);
-							$custom_logo_light  = $custom_logo_parts['dirname'].'/'.$custom_logo_parts['filename'].'-light.'.$custom_logo_parts['extension'];
-							$logo = $custom_logo_light;	
-						}
-						endif;
-					}
-					endforeach;
-				}
-				else
-				{
-					$logo = $custom_logo;	
-				}	
-
-
-		?>		
-		background-image: url(<?php echo $logo;?>);
-		background-size: 100% auto; width:auto;}
-		.login h1 a { height:200px !important; margin-bottom:0}
-
-		html, body, .wp-dialog { background-color: <?php echo $mobile_themecolor;?> !important;}
-		.login form { box-shadow: 0 0 5px 1px rgba(100, 100, 100, 0.3) !important;}
-		.login #backtoblog a, .login #nav a { color:#fff !important;}
-		</style>
-		<?php } ?>
-
-	<?php }
-	add_action( 'login_enqueue_scripts', 'cstm_my_login_logo' );
-
-/*----------------------------------------------*/
-/*			Modal de Fermeture Fancybox			*/
-/*----------------------------------------------*/
-	function cstm_modal_closing()
-	{
-		// version: 19/09/2023 Fb
-	 ?>
-		<script type="text/javascript">
-
-<?php  
-	if (get_field('display-date', 'option')):
-	{
-		$closingdescription = get_field('closing-description', 'option');
-		$closingimage = get_field('closing-image', 'option');	
-		
-		if($closingimage):
-		{
-			$closingimage='<img src="'.$closingimage.'" class="img-fluid">';
-		}
-		endif;
-		
-		// Date d'aujourd'hui
-		$date_today = date("m/d/Y");
-		$date_today = strtotime($date_today);
-		
-		// Date du début de l'évenement
-		$date_closing = get_field('closing-date' , 'option');
-		$datebefore = strtotime($date_closing);
-		$newclose = date_i18n("j F", $datebefore);
-
-		// Date 7 jours avant l'évènement
-		$date_today_7 = strtotime($date_closing.'- 7 days');
-		
-		if (!empty(get_field('opening-date', 'option'))):
-		{
-			// Date de fin de l'évènement
-			$date_opening = get_field('opening-date' , 'option');
-			$dateafter = strtotime($date_opening);	
-			$newopen = date_i18n("j F", $dateafter);
-		}
-		else:
-		{
-			$newopen = '';
-		}
-		endif;
-		
-		// Calcul des dates
-		$event = $datebefore <= $date_today && $date_today <= $dateafter;
-		$beforeevent = $date_today_7 <= $date_today && $date_today <= $datebefore;
-		
-		// Texte de la Fancybox
-		$code_html = '';
-		
-		if(get_field('type-closing', 'option')==1):
-		{
-			$code_html .= get_field('titre', 'option');
-		}
-		else:
-		{
-			$code_html .= get_field('entreprise', 'option');
-			
-			if($beforeevent):{$code_html .= ' sera ';}else:{$code_html .= ' est ';}endif;
-			
-			if(get_field('type-closing', 'option')==2):{$code_html .= 'en congés ';}elseif(get_field('type-closing', 'option')==3):{$code_html .= 'exceptionnellement fermé ';}endif;
-			
-			$code_html .= '<strong>' ;
-			
-			if(!empty(get_field('opening-date', 'option'))):{$code_html .= ' du ';}else:{$code_html .= ' le ';}endif;
-			
-			$code_html .=  $newclose;
-			
-			if(!empty(get_field('opening-date', 'option'))):{$code_html .= ' au '.$newopen;}endif;
-			
-			if(get_field('inclus', 'option') && !empty(get_field('opening-date', 'option'))):{$code_html .= '  inclus';}endif;
-		}
-		endif;
-		
-		$code_html .= '</strong></h3><div class="text-center">'.get_field('closing-description', 'option').'</div>';
-	 
-		if(!empty(get_field('closing-image', 'option'))):
-		{
-			$code_html .= ("<img src=".get_field('closing-image', 'option').">");
-		}
-		endif;
-
-		if ( $beforeevent || $event):
-		{
-			?>
-			$( document ).ready(function()
-			{
-				$.fancybox.open('<div class="message" style="max-width:600px;"><h3 class="text-center" style="font-weight:500"><?php echo($code_html);?></div>');
-			});	
-		<?php
-		}
-		endif;
-	}
-	endif;
-	?>
-</script>	
-	<?php
-	}
-
+/*}*/
