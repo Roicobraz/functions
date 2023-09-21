@@ -124,7 +124,7 @@
 /*--------------------------------------------------------------*/
 	function cstm_pubdraft($args)
 	{
-		//	version : 20/09/2023
+		// version: 21/09/2023
 		$date_begin	= $args['date_begin'];
 		$date_end	= $args['date_end'];
 		$content	= $args['content'];
@@ -148,34 +148,72 @@
 
 		if($publish || $duree_event):
 		{
-			echo $content;
+			return $content;
 		}
 		else:
 		{	
 			$post = array( 'ID' => get_the_id(), 'post_status' => 'draft' );
 			wp_update_post($post);
 		}
-		endif;
+		endif;	
 	}
 
- /*---------------------------------------------------------------------------------------------∖
-|	À travailler																				|
-|	Objectif : mettre dans une catégorie la publication une fois sa date dépassé				|
- ∖---------------------------------------------------------------------------------------------*/
-	function cstm_pubcategory()
+/*------------------------------------------------------------------*/
+/*	Mets dans une catégorie la publication une fois sa date dépassé	*/
+/*------------------------------------------------------------------*/
+	function cstm_pubterm($args)
 	{
-		if(term_exists('test'))
+		// version: 21/09/2023
+		$date_begin	= $args['date_begin'];
+		$date_end	= $args['date_end'];
+		$duree_event= $args['one_day'];
+		$idpost		= $args['id'];
+		$termname	= $args['termname'];
+		$taxonomy	= $args['taxonomy'];
+		
+		
+		// Date d'aujourd'hui
+		$date_today = date("m/d/Y");
+		$date_today = strtotime($date_today);
+		
+		// Date du début de l'évenement
+		$datebefore = strtotime($date_begin);
+		$date = date_i18n("j F", $datebefore);
+
+		// Date de fin de l'évènement
+		$dateafter = strtotime($date_end);
+		$date_f = date_i18n("j F", $dateafter);
+
+		// Calcul des dates
+		$publish = $datebefore <= $date_today && $date_today <= $dateafter;
+		
+		$id = term_exists( $termname, $taxonomy );
+		if ( $id ):
 		{
-			$id_cat = wp_get_post_terms();
-			
-			$jsp = array(
-				'ID' 			=> get_the_id(),
-				'post_category' => $id_cat
-			);
-			
-			wp_update_post($jsp);
-			print_r($id_cat);
+		
 		}
+		else:
+		{
+			wp_insert_term( $termname, $taxonomy );
+		}
+		endif;
+
+		
+
+		$term_cpt	= get_term_by('name', $termname, $taxonomy);
+		$term_id	= $term_cpt->term_id;
+		
+		if(!term_exists($term_id, $taxonomy)):
+		{
+			
+		}
+		endif;
+		
+		if(!($publish || $duree_event)):
+		{
+			wp_set_post_terms( $idpost, $term_id, $taxonomy, true );
+		}
+		endif;
 	}
 /*}*/
 
