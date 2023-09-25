@@ -11,6 +11,7 @@
  	Bootstrap == Bt
 	Jquery == Jq
 	Fancybox == Fb
+La majorité des fonctions ont une dépandance ACF Pro pour avoir le champ ACf répéteur
 */
 
 /* Admin Wordpress {*/
@@ -215,9 +216,33 @@
 		}
 		endif;
 	}
+
+/*----------------------------------------------*/
+/*		ajout de style pour le backoffice		*/
+/*----------------------------------------------*/
+/* Le CSS est appelé en tant que feuille de style */
+	function admin_css() 
+	{		
+//		version : 25/09/2023
+		$admin_handle = 'admin_css';
+		$admin_stylesheet = get_template_directory_uri() . '/css/stylad.css';
+		wp_enqueue_style($admin_handle, $admin_stylesheet);
+    }
+	add_action('admin_print_styles', 'admin_css', 11);
+
+/* Le CSS est appelé via du JS */
+	function admin_css() 
+	{
+//		version : 25/09/2023
+		add_theme_support( 'wp-block-styles' );
+		add_theme_support( 'editor-styles' );
+		add_editor_style( '/css/stylad.css' );
+    }
+	add_action( 'admin_init', 'admin_css' );
 /*}*/
 
 
+/* Autre Fonction {*/
 /*----------------------------------------------*/
 /*					Avoir un âge				*/
 /*----------------------------------------------*/
@@ -529,25 +554,108 @@
 		</script>	
 		<?php
 	}
+/*}*/
+
 
 /* Dépendance Bootstrap {
 /*----------------------------------------------*/
 /*					Carousel					*/
 /*----------------------------------------------*/
-	function cstm_carousel($repeater, $id = "carouselExample", $buttons, $multi)
+	function cstm_carousel($args)
 	{
-		//	version: 12/09/2023 Bt
-	?>	
-	<div class="container text-center my-3">
-    <div class="row mx-auto my-auto justify-content-center">
-        <div id="<?php echo $id ?>" class="carousel slide" data-bs-ride="carousel">
-            <div class="carousel-inner" role="listbox">
-				<?php	
-				$counter_slide = 0;	
-				while ( have_rows('repeater') ) : the_row();
-				{		
-					if( !empty(get_sub_field('image')) ):
-					//-----------------------------------------------	
+		//	version: 25/09/2023 Bt
+	
+		$repeater		= $args['repeater'];
+		$id				= $args['id'];
+		$buttons		= $args['buttons'];
+		$multi			= $args['multi'];
+		$template		= $args['template'];
+		$colonage		= $args['colonage'];
+		$taxonomie 		= $args['taxonomie'];
+		$nombre_de_post = $args['nombre_de_post'];
+	/*{*/
+		if(!empty($taxonomie)):
+		{
+			$taxname = "";
+			
+			foreach ($taxonomie as $taxid):
+			{
+				$taxname .= get_the_category_by_ID( $taxid ).',';
+			}
+			endforeach;
+			
+			if($taxname[-1]==','):
+			{
+				$taxname = substr_replace($taxname, "",-1);
+			}
+			endif;
+			
+			$atts = array(
+				'post_type' 	=> 'post',
+				'category_name' => $taxname, 
+				'orderby' 		=> 'date', 
+				'posts_per_page'=> $nombre_de_post
+			 );
+
+		} 
+		elseif(empty($repeater)):
+		{
+			echo ('Aucun contenu. Veuillez remplir le champ ACF répéteur Objet.');
+			return;
+		}
+		endif;
+	/* Valeur par défault { */
+		if(empty($id)):
+		{
+			$id = 'carouselcustom';
+		}
+		endif;
+		if(empty($buttons)):
+		{
+			$buttons = false;
+		}
+		endif;
+		if(empty($multi)):
+		{
+			$multi = false;
+		}
+		endif;
+		if(empty($template)):
+		{
+			$template = 1;
+		}
+		endif;	
+		if(empty($colonage)):
+		{
+			$colonage = 12;
+		}
+		endif;
+	/*}*/
+	/*}*/
+
+		$othercol = 12 - $colonage;
+		
+		$counter_slide 	= 0;
+		$code_html 		= '
+			<div class="container text-center my-3">
+				<div class="row mx-auto my-auto justify-content-center">
+					<div id="'.$id.'" class="carousel slide" data-bs-ride="carousel">
+						<div class="carousel-inner" role="listbox">
+					';
+			if(!empty($atts)):
+			{		
+				$query = new WP_Query($atts);
+//				print_r($query);
+				if ( $query->have_posts() ) : 
+				{
+					while ( $query->have_posts() ) :
+					{
+						$query->the_post();
+						//-------------------------------------------------
+						$image = get_the_post_thumbnail();
+						$titre = get_the_title();
+						$description = get_the_excerpt();
+						//-------------------------------------------------
 						if($counter_slide == 0 ):
 						{ 
 							$class_indicator = "active";
@@ -557,53 +665,132 @@
 							$class_indicator = '';
 						}
 						endif;	
-					//-----------------------------------------------
-						$background = get_sub_field('background');
-						$image = get_sub_field('image');
-						$titre = get_sub_field('titre');
-					//-----------------------------------------------
-						?>
-
-					<div class="<?php echo $class_indicator;?> carousel-item">
-						<div class="col-md-3">
-							<div class="card" style='background: <?php echo $background ?>;'>
-								<div class="card-img">
-									<img src="<?php echo $image ?>" class="img-fluid">
+					/* Content {*/
+						$code_html .= '
+							<div class="'.$class_indicator.' carousel-item">';
+						
+						if($template == 2):
+						{
+							$code_html .= '
+								<div class="row card" style="background: '.$background.';">
+									<div class="col-'.$colonage.' card-img">
+										<img src="'.$image.'" class="img-fluid">
+									</div>
+									<div class="card-img-overlay col-md" style="color: '.$color.';">'.$titre.'</div>
+									'.$description.'
 								</div>
-								<div class="card-img-overlay"><?php echo $titre ?></div>
-							</div>
-						</div>
-					</div>
-				<?php
-					$counter_slide++;
+							</div>';
+						}
+						elseif($template == 1):
+						{
+							$code_html .= '
+								<div class="row" style="background: '.$background.';">
+									<div class="col-'.$colonage.'">
+										<div>
+											<img src="'.$image.'" class="img-fluid">
+										</div>
+									</div>
+									<div class="col col-'.$othercol.'" style="color: '.$color.';">
+										<h3>'.$titre.'</h3>
+										'.$description.'
+									</div>
+								</div>
+						</div>';
+						}
+						endif;
+					/*}*/
+						$counter_slide++;
+					}
+					endwhile;
+				}
+				endif;
+			}
+			else:
+			{
+				while ( have_rows('repeater') ) : 
+				the_row();
+				{
+					if( !empty(get_sub_field('image')) ):
+					{
+					//-------------------------------------------------
+						$image 		= get_sub_field('image');
+						$titre 		= get_sub_field('titre');
+						$description= get_sub_field('description');
+						$background = get_sub_field('background');
+						$color 		= get_sub_field('color');
+					//-------------------------------------------------
+						if($counter_slide == 0 ):
+						{ 
+							$class_indicator = "active";
+						}	
+						else:
+						{
+							$class_indicator = '';
+						}
+						endif;	
+					/* Content {*/
+						$code_html .= '
+							<div class="'.$class_indicator.' carousel-item">';
+						
+						if($template == 2):
+						{
+							$code_html .= '
+								<div class="row card" style="background: '.$background.';">
+									<div class="col-'.$colonage.' card-img">
+										<img src="'.$image.'" class="img-fluid">
+									</div>
+									<div class="card-img-overlay col-'.$othercol.'" style="color: '.$color.';">'.$titre.'</div>
+									'.$description.'
+								</div>
+							</div>';
+						}
+						elseif($template == 1):
+						{
+							$code_html .= '
+								<div class="row" style="background: '.$background.';">
+									<div class="col-'.$colonage.'">
+										<div>
+											<img src="'.$image.'" class="img-fluid">
+										</div>
+									</div>
+									<div class="col col-'.$othercol.'" style="color: '.$color.';">
+										<h3>'.$titre.'</h3>
+										'.$description.'
+									</div>
+								</div>
+						</div>';
+						}
+						endif;
+					/*}*/
+						$counter_slide++;
+					}
 					endif;
 					wp_reset_postdata();	   
 				}
 				endwhile;	
-				?>
-				
-            </div>
-			<?php
-			if($buttons):
-			{
-				?>
-				<a class="carousel-control-prev bg-transparent w-aut button-l" href="#<?php echo $id ?>" role="button" data-bs-slide="prev">
-					<i class="fa-regular fa-circle-arrow-left" aria-hidden="true"></i>
-				</a>
-				<a class="carousel-control-next bg-transparent w-aut button-r" href="#<?php echo $id ?>" role="button" data-bs-slide="next">
-					<i class="fa-regular fa-circle-arrow-right" aria-hidden="true"></i>
-				</a>
-				<?php
 			}
 			endif;
+		
+		$code_html .= '</div>';
+		
+		if($buttons):
+		{
+			$code_html .= '
+				<a class="carousel-control-prev bg-transparent w-aut button-l" href="#'.$id.'" role="button" data-bs-slide="prev">
+					<i class="fa-regular fa-circle-arrow-left" aria-hidden="true"></i>
+				</a>
+				<a class="carousel-control-next bg-transparent w-aut button-r" href="#'.$id.'" role="button" data-bs-slide="next">
+					<i class="fa-regular fa-circle-arrow-right" aria-hidden="true"></i>
+				</a>
+			';
+		}
+		endif;
             
-			?>
-        </div>
-    </div>
-</div>
+		$code_html .= '</div></div></div>';
 
-<?php if($multi):
-		{ ?>
+ 		if($multi):
+		{ 
+			$code_html .='
 			<style>
 				@media (max-width: 767px) 
 				{
@@ -622,7 +809,6 @@
 					display: flex;
 				}
 
-				/* medium and up screens */
 				@media (min-width: 768px) 
 				{
 					.carousel-inner .carousel-item-end.active, .carousel-inner .carousel-item-next 
@@ -643,7 +829,7 @@
 			</style>
 
 			<script>
-				let items = document.querySelectorAll('.carousel .carousel-item')
+				let items = document.querySelectorAll(".carousel .carousel-item")
 
 				items.forEach((el) => {
 					const minPerSlide = 4
@@ -658,10 +844,12 @@
 						next = next.nextElementSibling
 					}
 				})
-			</script>	
-		<?php
+			</script>
+			';
 		}
 		endif;
+	
+		return($code_html);
 	}
 
 
