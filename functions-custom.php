@@ -281,7 +281,7 @@ La majorité des fonctions ont une dépandance ACF Pro pour avoir le champ ACf r
 /*--------------------------------------------------*/
 	function cstm_compare_date($date_opening)
 	{
-		// version: 19/09/2023
+		// version: 19/09/2023 ACF Pro
 		
 		// Date d'aujourd'hui
 		$date_today = date("m/d/Y");
@@ -313,7 +313,7 @@ La majorité des fonctions ont une dépandance ACF Pro pour avoir le champ ACf r
 /*----------------------------------------------*/
 	function cstm_modal_closing()
 	{
-		// version: 19/09/2023 Fb
+		// version: 19/09/2023 ACF Pro Fb
 	 ?>
 		<script type="text/javascript">
 
@@ -563,7 +563,7 @@ La majorité des fonctions ont une dépandance ACF Pro pour avoir le champ ACf r
 /*----------------------------------------------*/
 	function cstm_carousel($args)
 	{
-		//	version: 25/09/2023 Bt
+		//	version: 25/09/2023 ACF Pro Bt
 	
 		$repeater		= $args['repeater'];
 		$id				= $args['id'];
