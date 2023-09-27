@@ -11,7 +11,7 @@
  	Bootstrap == Bt
 	Jquery == Jq
 	Fancybox == Fb
-La majorité des fonctions ont une dépandance ACF Pro pour avoir le champ ACf répéteur
+	ACF et ACF Pro
 */
 
 /* Admin Wordpress {*/
@@ -281,7 +281,7 @@ La majorité des fonctions ont une dépandance ACF Pro pour avoir le champ ACf r
 /*--------------------------------------------------*/
 	function cstm_compare_date($date_opening)
 	{
-		// version: 19/09/2023 ACF Pro
+		// version: 19/09/2023 ACF
 		
 		// Date d'aujourd'hui
 		$date_today = date("m/d/Y");
@@ -313,7 +313,7 @@ La majorité des fonctions ont une dépandance ACF Pro pour avoir le champ ACf r
 /*----------------------------------------------*/
 	function cstm_modal_closing()
 	{
-		// version: 19/09/2023 ACF Pro Fb
+		// version: 19/09/2023 ACF Fb
 	 ?>
 		<script type="text/javascript">
 
