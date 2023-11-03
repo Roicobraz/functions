@@ -923,3 +923,602 @@
 				<?php
 	}
 /*}*/
+
+/* Filtre {
+/*----------------PREGET : product -----------------------------------------*/
+function productquery( $query ) {
+    //if ( ! is_admin() && $query->is_post_type_archive('product') || ! is_admin() && $query->is_tax('category_product') && $query->is_main_query() ) {
+    if ( $query->is_main_query() && $query->is_post_type_archive('product') || $query->is_main_query() && $query->is_tax('category_product')  ) {
+		
+//		print_r($query);
+
+		//echo $block_loop_timesection;	
+
+		//$query->set( 'posts_per_page', '1' );
+		//$query->set('order','ASC');
+		$query->set('order','DESC');
+		$query->set('orderby','meta_value_num');
+		$query->set('meta_key','carat');
+		//$query->set('meta_type','CHAR');
+		$query->set('posts_per_page', 24);		
+
+		/*
+		$query->set( 'meta_query', array(
+			  array(
+				  'key'     => 'event_date-end',
+				  'value'   => date( 'Ymd' ),
+				  'compare' => '>=',
+				  'type'    => 'DATETIME'
+			  )
+		  ) );
+		*/	
+		// print_r($query);
+
+		// Ne pas afficher les evenements passés
+		$couleur = get_query_var( 'couleur' );
+		if ($couleur != "" ) 
+		{
+//			echo $couleur;
+			$query->set( 'meta_query', 
+				array(array(
+				'key'     => 'couleur',
+				'value'   => $couleur,
+				'compare' => 'LIKE',
+				)
+			) 
+		   );	
+		}
+		
+		$shape = get_query_var( 'shape' );
+		if ($shape != "" ) 
+		{
+			$query->set( 'tax_query', 
+				array(
+					'relation' => 'AND',
+					array(
+						'taxonomy' 	=> 'category_product', 
+						'field'		=> 'slug', 
+						'terms'		=> 'saphirs-de-couleurs',
+					),
+					array(
+						'taxonomy'	=> 'shape_product',
+						'field'		=> 'slug',
+						'terms'		=> $shape,
+						'compare' 	=> '=',
+					)
+				) 
+		   );	
+		}
+		
+		
+		$min = get_query_var( 'min' );
+		$max = get_query_var( 'max' );
+		if ($min != "" || $max != "" ) 
+		{
+			$query->set( 'meta_query', 
+				array(
+					'relation' => 'AND', 
+					array(
+						'key' => 'carat',
+						'value' => $min, 
+						'compare'  => '>=',
+						'type' => 'DECIMAL(4,2)'
+					), 
+					array(
+						'key' => 'carat', 
+						'value' => $max, 
+						'compare'  => '<=',
+						'type' => 'DECIMAL(4,2)'
+					)
+				)
+			);
+		}		
+		
+		//pas necessaire de forcer le NB d'affichage
+		//$query->set('posts_per_page','20');
+		// ---------------
+		//print_r($query);
+		
+    }
+}
+add_action( 'pre_get_posts', 'productquery' );
+
+// DECLARATION D'UN PARAMETRE GET -------------------------------------------
+add_filter( 'query_vars', function( $query_vars ) {
+	$query_vars[] = 'couleur';
+	return $query_vars;
+} );
+
+add_filter( 'query_vars', function( $query_vars_mincrt ) {
+	$query_vars_mincrt[] = 'min';
+	return $query_vars_mincrt;
+} );
+
+add_filter( 'query_vars', function( $query_vars_maxcrt ) {
+	$query_vars_maxcrt[] = 'max';
+	return $query_vars_maxcrt;
+} );
+
+add_filter( 'query_vars', function( $query_vars_shape ) {
+	$query_vars_shape[] = 'shape';
+	return $query_vars_shape;
+} );
+// --------------------------------------------------------------------------
+
+function create_filter_color() 
+{	
+	if ( is_tax('category_product') ) 
+	{
+		$term = get_queried_object();
+
+		/*			 Get color			 */
+		/*{
+		// Recup du get COLOR
+		$get_couleur = get_query_var( 'couleur' );		
+
+		$args['post_type'] = 'product';
+		// Je cible uniquement le terme actuel
+		$args['tax_query'] = array(	array('taxonomy' => 'category_product', 'field' => 'slug', 'terms' => $term->slug));
+
+//		 Récupère les information du champ via son slug et l'ID de la page 
+		$field = get_field_object('couleur', 2131)['choices'];
+		echo'<p id="filter_couleur">filtre de couleur :';
+		foreach ($field as $color):
+		{
+			if ($color != 'Autre'):
+			{
+				if($get_couleur == $color):
+				{
+					echo '<a href="?couleur='.$color.'" class="btn btn-dark btn-sm mx-1">'.$color.'</a>';
+					break;
+				}
+				elseif($get_couleur == null):
+				{
+					$args['meta_query'] = array('key' => 'couleur', 'value' => $color, 'compare'  => 'LIKE');
+
+					$query = new WP_Query($args);
+//					print_r($query);
+
+					$count = $query->found_posts;	
+
+					if ($count > 0):
+					{
+						$term_id = $term->term_id;
+						$term_link = get_term_link($term_id);
+
+						echo '<a href="'.$term_link.'?couleur='.$color.'" class="btn btn-dark btn-sm mx-1">'.$color.'</a>';
+					}
+					endif;
+				}
+				endif;
+			}
+			endif;
+		}
+		endforeach;
+		wp_reset_postdata();
+	/*}*/
+		
+		/* 			Get carat			 */
+		/*{*/
+			$get_carat_min = get_query_var( 'min' );
+			$get_carat_max = get_query_var( 'max' );
+
+			if ( !str_contains($_SERVER['REQUEST_URI'], '?min') ):
+			{
+				$term = get_queried_object(); // page actuelle
+				$termslug = $term->slug;
+			}
+			else:
+			{
+				$uri = explode( '/', $_SERVER['REQUEST_URI'] );
+				$termslug = $uri[3];
+			}
+			endif;
+
+			// Je cible uniquement le terme actuel
+			$args_carat['post_type'] = 'product';
+			$args_carat['posts_per_page'] = 999;
+			$args_carat['tax_query'] = array(array('taxonomy' => 'category_product', 'field' => 'slug', 'terms' => $termslug));
+
+			$query_carat = new WP_Query($args_carat);
+			$carats= array();
+			if ( $query_carat ) :
+			{
+				while ( $query_carat->have_posts() ) :
+				{
+					$query_carat->the_post();
+					$crt = get_field_object('carat', get_the_id())['value'];
+
+					if( !in_array($crt, $carats) ):
+					{
+						array_push($carats, $crt);
+					}
+					endif;
+				}
+				endwhile; 
+			}
+			endif;	
+//			print_r($carats);
+						
+			// Valeurs minimale et maximale des inputs
+			$min = min($carats);
+			$max = max($carats);
+
+			$args_carat['meta_query'] = array(
+				'relation' => 'AND', 
+				array(
+					'key' => 'carat',
+					'value' => $min, 
+					'compare'  => '>=',
+					'type' => 'DECIMAL(4,2)'
+				), 
+				array(
+					'key' => 'carat', 
+					'value' => $max, 
+					'compare'  => '<=',
+					'type' => 'DECIMAL(4,2)'
+				)
+			);
+
+			$query_carat = new WP_Query($args_carat);
+//			print_r($query_carat);
+			wp_reset_postdata();
+		/*}*/
+		
+		/*			Get shape			 */
+		/*{*/
+			$args_shape['post_type'] = 'product';
+			$args_shape['posts_per_page'] = 999;
+			$args_shape['tax_query'] = 
+				array(
+					array(
+						'taxonomy' 	=> 'category_product', 
+						'field'		=> 'slug', 
+						'terms'		=> $term
+					));
+		
+			$query_shape = new WP_Query($args_shape);
+		
+			if( $query_shape->have_posts() ):
+			{
+				$shapes = array();
+				while( $query_shape->have_posts() ):
+				{
+					$query_shape->the_post();	
+					$shape_term = get_the_terms( get_the_ID(), 'shape_product' );
+					$shape_term = $shape_term[0];
+					$shape_term = $shape_term->name;
+
+					if(!in_array($shape_term, $shapes)):
+					{ 
+						array_push($shapes, $shape_term);
+					}
+					endif;
+				}
+				endwhile;
+				wp_reset_postdata();
+			}
+			endif;
+		
+			$args_shape['tax_query'] = 
+					array(
+						'relation' => 'AND',
+						array(
+							'taxonomy' 	=> 'category_product', 
+							'field'		=> 'slug', 
+						),
+						array(
+							'taxonomy'	=> 'shape_product',
+							'field'		=> 'slug',
+							'terms'		=> $shape_term,
+							'compare' 	=> 'LIKE',
+						)
+				);
+			$query_shape = new WP_Query($args_shape);
+		/*}*/
+		
+		$code_html = '		
+			<div class="accordion" id="accordionExample">
+				<div class="accordion-item">
+					<h2 class="accordion-header">
+						<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+							Recherches avancées +
+						</button>
+					</h2>
+					<div id="collapseOne" class="accordion-collapse collapsed show" data-bs-parent="#accordionExample">
+						<div class="accordion-body">
+							<form method="get" action="">
+							<div class="input_button">
+								<div class="input_filter">
+									<span class="in_title">Carats&nbsp;:&nbsp;</span>
+									'.in_double_range($min, $max).'	
+								</div>	
+								<div class="input_filter">
+									<span class="in_title">Forme&nbsp;:&nbsp;</span>
+									'.in_dropdown($shapes).'						
+								</div>
+							</div>
+							<div class="input_button">
+								<div class="in_btn">
+									<input class="btn btn-sm" type="submit">
+								</div>
+							';
+						// Bouton pour desactiver le filtre GET actif
+						if ( /*$get_couleur != "" ||*/ $get_carat_min != "" || $get_carat_max != "" ):
+						{
+						$code_html .= '
+								<div class="in_btn">
+									<a href="./" class="btn btn-dark btn-sm">X supprimer les filtres</a>
+								</div>';
+						}
+						endif;
+		$code_html .= '		</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<style>
+			.input_button
+			{
+				display: flex;
+  				flex-wrap: wrap;
+				margin-bottom: 0.5rem;
+			}
+			
+			.input_filter
+			{
+				display: flex;
+			}
+
+			.in_title, .range
+			{
+				margin: auto;
+			}
+			
+			.in_btn
+			{
+				display: flex;
+				padding: 0 0.5rem;
+			}
+			
+			.in_btn input, .in_btn input:hover
+			{
+				background: #a0d9ed;
+			}
+		</style>
+		';
+		
+		echo($code_html);
+	}
+}
+add_action('wh_hook_before_container_loop', 'create_filter_color');
+
+// --------------------------------------------------------------------------
+
+function in_double_range($min = 0, $max = 20)
+{ 
+	$code_html = '
+	<div class="range row">
+		<div class="range-slider">
+			<span class="range-selected"></span>
+		</div>
+		<div class="range-input col">
+			<input type="range" min="'.$min.'" max="'.$max.'" step="0.01" value='.$min.' oninput="document.getElementById(`min`).value = this.value">
+			<input type="range" min="'.$min.'" max="'.$max.'" step="0.01" value='.$max.'
+			oninput="document.getElementById(`max`).value = this.value">
+		</div>
+		<div class="range-price col">
+			<label for="min">Min</label>
+			<input type="number" class="form-control" id="min" name="min" min="'.$min.'" value="'.$min.'" step="0.01">
+			<label for="max">Max</label>
+			<input type="number" class="form-control" id="max" name="max" max="'.$max.'" value="'.$max.'" step="0.01">
+		</div>
+	</div>
+	<style>
+		.range-slider
+		{
+			height: 5px;
+			position: relative;
+			background-color: #e1e9f6;
+			border-radius: 2px;
+			width: 15rem;
+			margin: auto;
+		}
+
+		.range-selected 
+		{
+			height: 100%;
+			left: 0%;
+			right: 0%;
+			position: absolute;
+			border-radius: 5px;
+			background-color: #343a40;
+		}
+
+		.range-input
+		{
+			position: relative;
+			margin: auto;
+		}
+
+		.range-input input 
+		{
+			position: absolute;
+			width: 15rem;
+			height: 5px;
+			top: -2.5px;
+			left: -15rem;
+			background: none;
+			pointer-events: none;
+			-webkit-appearance: none;
+			-moz-appearance: none;
+			
+		}
+
+		.range-input input::-webkit-slider-thumb 
+		{
+			height: 20px;
+			width: 20px;
+			border-radius: 50%;
+			border: 3px solid #343a40;
+			background-color: #fff;
+			pointer-events: auto;
+			-webkit-appearance: none;
+		}
+
+		.range-input input::-moz-range-thumb 
+		{
+			height: 15px;
+			width: 6px;
+			border-radius: 20%;
+			border: 2px solid #343a40;
+			background-color: #d1d2d8;
+			pointer-events: auto;
+			-moz-appearance: none;
+			cursor: ew-resize;
+		}
+		
+		.range-input input::-moz-range-thumb:active
+		{
+			background-color: #a0d9ed;
+		}
+
+		.range-price 
+		{
+			width: 100%;
+			display: flex;
+			align-items: center;
+			margin: 1rem 0rem;
+		}
+
+		.range-price label 
+		{
+			margin-right: 5px;
+		}
+
+		.range-price input 
+		{
+			width: 5rem;
+			padding: 5px;
+		}
+
+		.range-price input:first-of-type 
+		{
+			margin-right: 15px;
+		}
+	</style>
+<!-- Intervalle minmum entre les 2 points -->
+	<script>
+		let rangeMin = 0.01;
+		const range = document.querySelector(".range-selected");
+		const rangeInput = document.querySelectorAll(".range-input input");
+		const rangePrice = document.querySelectorAll(".range-price input");
+
+		rangeInput.forEach((input) => {
+			input.addEventListener("input", (e) => {
+				let minRange = rangeInput[0].value;
+				let maxRange = rangeInput[1].value;
+				if (maxRange - minRange < rangeMin) {
+					if (e.target.className === "min") {
+						rangeInput[0].value = maxRange - rangeMin;
+					} else {
+						rangeInput[1].value = minRange + rangeMin;
+					}
+				} else {
+					range.style.left = (minRange / rangeInput[0].max) * 100 + "%";
+					range.style.right = 100 - (maxRange / rangeInput[1].max) * 100 + "%";
+				}
+			});
+		});
+
+		rangePrice.forEach((input) => {
+			input.addEventListener("input", (e) => {
+				let minPrice = rangePrice[0].value;
+				let maxPrice = rangePrice[1].value;
+				if (maxPrice - minPrice >= rangeMin && maxPrice <= rangeInput[1].max) {
+					if (e.target.className === "min") {
+						rangeInput[0].value = minPrice;
+						range.style.left = (minPrice / rangeInput[0].max) * 100 + "%";
+					} else {
+						rangeInput[1].value = maxPrice;
+						range.style.right = 100 - (maxPrice / rangeInput[1].max) * 100 + "%";
+					}
+				}
+			});
+		});
+	</script>
+	';
+	return($code_html);
+}
+
+function in_checkbox($shapes)
+{
+	$code_html ='<div class="checkbox">';
+	
+	foreach( $shapes as $shape_term ):
+	{ 
+		$code_html .= '
+		<div class="elements">
+			 <input type="checkbox" id="'.$shape_term.'" name="shape" value="'.$shape_term.'">
+			<label for="'.$shape_term.'">'.$shape_term.'</label>
+		</div>';
+	}
+	endforeach;
+	
+	$code_html .= '
+		</div>
+		
+		<style>
+			.checkbox
+			{
+				display: grid;
+				grid-template-columns: repeat(5, 1fr);
+				grid-auto-rows: minmax(0.5rem, auto);
+			}
+			
+			.elements
+			{
+				background-color: rgba(255, 255, 255, 0.8);
+				border: 1px solid rgba(0, 0, 0, 0.8);
+				padding: 5px;
+			}
+		</style>
+	';
+	return($code_html);
+}
+
+function in_dropdown($shapes)
+{
+	$code_html = '
+		<select id="shape" name="shape">
+			<option value="">-- Par défaut --</option>';
+	
+	foreach( $shapes as $shape_term ):
+	{
+		$code_html .= '
+			<option value="'.$shape_term.'">'.$shape_term.'</option>';
+	}		
+	endforeach;
+	
+	$code_html .= '
+		</select>
+		
+		<style>
+			select
+			{
+				border: #d1d2d8 1px solid;
+				background: #d1d2d8;
+				border-radius: 7px;
+				color: #0a0c18;
+				padding: 0.5rem;
+				height: fit-content;
+  				margin: auto;
+			}
+		</style>
+	';
+
+	return($code_html);
+}
+/*}*/
