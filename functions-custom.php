@@ -245,7 +245,7 @@
 /*----------------------------------------------*/
 /*					Carousel					*/
 /*----------------------------------------------*/
-	function cstm_carousel($args)
+	function bs_carousel($args)
 	{
 		//	version: 25/09/2023 ACF Pro Bt
 	
@@ -539,7 +539,7 @@
 /*----------------------------------------------*/
 /*					Accordéon					*/
 /*----------------------------------------------*/
-	function cstm_accordeon($args)
+	function bs_accordeon($args)
 	{
 		//	version: 03/11/2023 Bt
 		// Valeurs {
@@ -597,7 +597,7 @@
 /*------------------------------------------*/
 /*					Card					*/
 /*------------------------------------------*/
-	function cstm_card($title = '', $image = '', $description, $link = '#', $button = '',$test = '')
+	function bs_card($title = '', $image = '', $description, $link = '#', $button = '',$test = '')
 	{
 		//	version: 12/09/2023 Bt
 	?>
@@ -620,7 +620,7 @@
 /*------------------------------------------*/
 /*				Scrollspy					*/
 /*------------------------------------------*/
-	function cstm_scrollspy_start($nav_id = "navbar-example3")
+	function bs_scrollspy_start($nav_id = "navbar-example3")
 	{
 		//	version: 12/09/2023 Bt
 		$code_html = 'data-bs-spy="scroll" data-bs-target="#'.$nav_id.'" data-bs-smooth-scroll="true" data-bs-root-margin="0px 0px -50%" class="scrollspy-example-2" tabindex="0"';
@@ -628,7 +628,7 @@
 		echo($code_html);
 	}
 
-	function cstm_scrollspy($nav_menu)
+	function bs_scrollspy($nav_menu)
 	{
 		//	version: 12/09/2023 Bt
 		$blocks = wp_get_nav_menu_items($nav_menu, $nav_id = "navbar-example3");	?>
@@ -1234,12 +1234,8 @@ function in_radio($values, $filter )
 /*---------------- PREGET : product -----------------------------------------*/
 function productquery( $query ) {
     //if ( ! is_admin() && $query->is_post_type_archive('product') || ! is_admin() && $query->is_tax('category_product') && $query->is_main_query() ) {}
-    if ( $query->is_main_query() && $query->is_post_type_archive('product') || $query->is_main_query() && $query->is_tax('category_product')  ) {
-		
-//		print_r($query);
-
-		//echo $block_loop_timesection;	
-
+    if ( $query->is_main_query() && $query->is_post_type_archive('product') || $query->is_main_query() && $query->is_tax('category_product')  ) 
+	{
 		//$query->set( 'posts_per_page', '1' );
 		//$query->set('order','ASC');
 		$query->set('order','DESC');
@@ -1248,23 +1244,10 @@ function productquery( $query ) {
 		//$query->set('meta_type','CHAR');
 		$query->set('posts_per_page', 24);		
 
-		/*
-		$query->set( 'meta_query', array(
-			  array(
-				  'key'     => 'event_date-end',
-				  'value'   => date( 'Ymd' ),
-				  'compare' => '>=',
-				  'type'    => 'DATETIME'
-			  )
-		  ) );
-		*/	
-		// print_r($query);
-
 		// Ne pas afficher les evenements passés
 		$couleur = get_query_var( 'couleur' );
 		if ($couleur != "" ) 
 		{
-//			echo $couleur;
 			$query->set( 'meta_query', 
 				array(array(
 				'key'     => 'couleur',
@@ -1319,32 +1302,11 @@ function productquery( $query ) {
 				)
 			);
 		}		
-		
-		//pas necessaire de forcer le NB d'affichage
-		//$query->set('posts_per_page','20');
-		// ---------------
-		//print_r($query);
-		
     }
 }
 add_action( 'pre_get_posts', 'productquery' );
 
 // DECLARATION D'UN PARAMETRE GET -------------------------------------------
-add_filter( 'query_vars', function( $query_vars ) {
-	$query_vars[] = 'couleur';
-	return $query_vars;
-} );
-
-add_filter( 'query_vars', function( $query_vars_mincrt ) {
-	$query_vars_mincrt[] = 'min';
-	return $query_vars_mincrt;
-} );
-
-add_filter( 'query_vars', function( $query_vars_maxcrt ) {
-	$query_vars_maxcrt[] = 'max';
-	return $query_vars_maxcrt;
-} );
-
 add_filter( 'query_vars', function( $query_vars_shape ) {
 	$query_vars_shape[] = 'shape';
 	return $query_vars_shape;
