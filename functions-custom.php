@@ -241,6 +241,429 @@
 	add_action( 'admin_init', 'admin_css' );
 /*}*/
 
+/* Dépendance Bootstrap {
+/*----------------------------------------------*/
+/*					Carousel					*/
+/*----------------------------------------------*/
+	function cstm_carousel($args)
+	{
+		//	version: 25/09/2023 ACF Pro Bt
+	
+		$repeater		= $args['repeater'];
+		$id				= $args['id'];
+		$buttons		= $args['buttons'];
+		$multi			= $args['multi'];
+		$template		= $args['template'];
+		$colonage		= $args['colonage'];
+		$taxonomie 		= $args['taxonomie'];
+		$nombre_de_post = $args['nombre_de_post'];
+	/*{*/
+		if(!empty($taxonomie)):
+		{
+			$taxname = "";
+			
+			foreach ($taxonomie as $taxid):
+			{
+				$taxname .= get_the_category_by_ID( $taxid ).',';
+			}
+			endforeach;
+			
+			if($taxname[-1]==','):
+			{
+				$taxname = substr_replace($taxname, "",-1);
+			}
+			endif;
+			
+			$atts = array(
+				'post_type' 	=> 'post',
+				'category_name' => $taxname, 
+				'orderby' 		=> 'date', 
+				'posts_per_page'=> $nombre_de_post
+			 );
+
+		} 
+		elseif(empty($repeater)):
+		{
+			echo ('Aucun contenu. Veuillez remplir le champ ACF répéteur Objet.');
+			return;
+		}
+		endif;
+	/* Valeur par défault { */
+		if(empty($id)):
+		{
+			$id = 'carouselcustom';
+		}
+		endif;
+		if(empty($buttons)):
+		{
+			$buttons = false;
+		}
+		endif;
+		if(empty($multi)):
+		{
+			$multi = false;
+		}
+		endif;
+		if(empty($template)):
+		{
+			$template = 1;
+		}
+		endif;	
+		if(empty($colonage)):
+		{
+			$colonage = 12;
+		}
+		endif;
+	/*}*/
+	/*}*/
+
+		$othercol = 12 - $colonage;
+		
+		$counter_slide 	= 0;
+		$code_html 		= '
+			<div class="container text-center my-3">
+				<div class="row mx-auto my-auto justify-content-center">
+					<div id="'.$id.'" class="carousel slide" data-bs-ride="carousel">
+						<div class="carousel-inner" role="listbox">
+					';
+			if(!empty($atts)):
+			{		
+				$query = new WP_Query($atts);
+//				print_r($query);
+				if ( $query->have_posts() ) : 
+				{
+					while ( $query->have_posts() ) :
+					{
+						$query->the_post();
+						//-------------------------------------------------
+						$image = get_the_post_thumbnail();
+						$titre = get_the_title();
+						$description = get_the_excerpt();
+						//-------------------------------------------------
+						if($counter_slide == 0 ):
+						{ 
+							$class_indicator = "active";
+						}	
+						else:
+						{
+							$class_indicator = '';
+						}
+						endif;	
+					/* Content {*/
+						$code_html .= '
+							<div class="'.$class_indicator.' carousel-item">';
+						
+						if($template == 2):
+						{
+							$code_html .= '
+								<div class="row card" style="background: '.$background.';">
+									<div class="col-'.$colonage.' card-img">
+										<img src="'.$image.'" class="img-fluid">
+									</div>
+									<div class="card-img-overlay col-md" style="color: '.$color.';">'.$titre.'</div>
+									'.$description.'
+								</div>
+							</div>';
+						}
+						elseif($template == 1):
+						{
+							$code_html .= '
+								<div class="row" style="background: '.$background.';">
+									<div class="col-'.$colonage.'">
+										<div>
+											<img src="'.$image.'" class="img-fluid">
+										</div>
+									</div>
+									<div class="col col-'.$othercol.'" style="color: '.$color.';">
+										<h3>'.$titre.'</h3>
+										'.$description.'
+									</div>
+								</div>
+						</div>';
+						}
+						endif;
+					/*}*/
+						$counter_slide++;
+					}
+					endwhile;
+				}
+				endif;
+			}
+			else:
+			{
+				while ( have_rows('repeater') ) : 
+				the_row();
+				{
+					if( !empty(get_sub_field('image')) ):
+					{
+					//-------------------------------------------------
+						$image 		= get_sub_field('image');
+						$titre 		= get_sub_field('titre');
+						$description= get_sub_field('description');
+						$background = get_sub_field('background');
+						$color 		= get_sub_field('color');
+					//-------------------------------------------------
+						if($counter_slide == 0 ):
+						{ 
+							$class_indicator = "active";
+						}	
+						else:
+						{
+							$class_indicator = '';
+						}
+						endif;	
+					/* Content {*/
+						$code_html .= '
+							<div class="'.$class_indicator.' carousel-item">';
+						
+						if($template == 2):
+						{
+							$code_html .= '
+								<div class="row card" style="background: '.$background.';">
+									<div class="col-'.$colonage.' card-img">
+										<img src="'.$image.'" class="img-fluid">
+									</div>
+									<div class="card-img-overlay col-'.$othercol.'" style="color: '.$color.';">'.$titre.'</div>
+									'.$description.'
+								</div>
+							</div>';
+						}
+						elseif($template == 1):
+						{
+							$code_html .= '
+								<div class="row" style="background: '.$background.';">
+									<div class="col-'.$colonage.'">
+										<div>
+											<img src="'.$image.'" class="img-fluid">
+										</div>
+									</div>
+									<div class="col col-'.$othercol.'" style="color: '.$color.';">
+										<h3>'.$titre.'</h3>
+										'.$description.'
+									</div>
+								</div>
+						</div>';
+						}
+						endif;
+					/*}*/
+						$counter_slide++;
+					}
+					endif;
+					wp_reset_postdata();	   
+				}
+				endwhile;	
+			}
+			endif;
+		
+		$code_html .= '</div>';
+		
+		if($buttons):
+		{
+			$code_html .= '
+				<a class="carousel-control-prev bg-transparent w-aut button-l" href="#'.$id.'" role="button" data-bs-slide="prev">
+					<i class="fa-regular fa-circle-arrow-left" aria-hidden="true"></i>
+				</a>
+				<a class="carousel-control-next bg-transparent w-aut button-r" href="#'.$id.'" role="button" data-bs-slide="next">
+					<i class="fa-regular fa-circle-arrow-right" aria-hidden="true"></i>
+				</a>
+			';
+		}
+		endif;
+            
+		$code_html .= '</div></div></div>';
+
+ 		if($multi):
+		{ 
+			$code_html .='
+			<style>
+				@media (max-width: 767px) 
+				{
+					.carousel-inner .carousel-item > div 
+					{
+						display: none;
+					}
+					.carousel-inner .carousel-item > div:first-child 
+					{
+						display: block;
+					}
+				}
+
+				.carousel-inner .carousel-item.active, .carousel-inner .carousel-item-next, .carousel-inner .carousel-item-prev 
+				{
+					display: flex;
+				}
+
+				@media (min-width: 768px) 
+				{
+					.carousel-inner .carousel-item-end.active, .carousel-inner .carousel-item-next 
+					{
+					  transform: translateX(25%);
+					}
+
+					.carousel-inner .carousel-item-start.active, .carousel-inner .carousel-item-prev 
+					{
+						transform: translateX(-25%);
+					}
+				}
+
+				.carousel-inner .carousel-item-end, .carousel-inner .carousel-item-start 
+				{ 
+				  transform: translateX(0);
+				}
+			</style>
+
+			<script>
+				let items = document.querySelectorAll(".carousel .carousel-item")
+
+				items.forEach((el) => {
+					const minPerSlide = 4
+					let next = el.nextElementSibling
+					for (var i=1; i<minPerSlide; i++) {
+						if (!next) {
+							// wrap carousel by using first child
+							next = items[0]
+						}
+						let cloneChild = next.cloneNode(true)
+						el.appendChild(cloneChild.children[0])
+						next = next.nextElementSibling
+					}
+				})
+			</script>
+			';
+		}
+		endif;
+	
+		return($code_html);
+	}
+
+/*----------------------------------------------*/
+/*					Accordéon					*/
+/*----------------------------------------------*/
+	function cstm_accordeon($args)
+	{
+		//	version: 03/11/2023 Bt
+		// Valeurs {
+		if(empty($args['id'])):
+		{
+			$id = rand();
+		}
+		else:
+		{
+			$title	= $args['id'];
+		}
+		endif;
+
+		if(empty($args['title'])):
+		{
+			$title = '...';
+		}
+		else:
+		{
+			$title	= $args['title'];
+		}
+		endif;
+
+		if(empty($args['content'])):
+		{
+			$content = '...';
+		}
+		else:
+		{
+			$content= $args['content'];
+		}
+		endif;
+		//}
+
+		$code_html = '
+		<div id="'.$id.'" class="acf-accordeon">
+			<div class="accordion" id="accordion_'.$id.'">
+				<div class="accordion-item">
+					<h2 class="accordion-header" id="heading_'.$id.'">
+						<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_'.$id.'" aria-expanded="true" aria-controls="collapse'.$id.'">
+							'.$title.'
+						</button>
+					</h2>
+					<div id="collapse_'.$id.'" class="accordion-collapse collapse" aria-labelledby="heading_'.$id.'" data-bs-parent="#accordion_'.$id.'">
+						<div class="accordion-body">
+							'.$content.'
+						</div>
+					</div>
+				</div>
+			</div><!-- accordeon -->';
+
+		return($code_html);
+	}
+
+/*------------------------------------------*/
+/*					Card					*/
+/*------------------------------------------*/
+	function cstm_card($title = '', $image = '', $description, $link = '#', $button = '',$test = '')
+	{
+		//	version: 12/09/2023 Bt
+	?>
+		<div class="card">
+			<div class="card__face card__face--front">
+				<img src="<?php echo($image); ?>" class="card-img-top" alt="...">
+				<div class="card-body">
+					<h6 class="card-title"><?php echo($title); ?></h6>
+					<div class="card-text row">
+						<p class='description col'><?php echo($description); ?><a href="<?php echo($link); ?>" class="btn"><?php echo $button ?></a></p>
+					</div>
+				</div>
+			</div>
+   	 		<div class="card__face card__face--back"><?= $test ?></div>
+		</div>
+	<?php
+	}
+
+
+/*------------------------------------------*/
+/*				Scrollspy					*/
+/*------------------------------------------*/
+	function cstm_scrollspy_start($nav_id = "navbar-example3")
+	{
+		//	version: 12/09/2023 Bt
+		$code_html = 'data-bs-spy="scroll" data-bs-target="#'.$nav_id.'" data-bs-smooth-scroll="true" data-bs-root-margin="0px 0px -50%" class="scrollspy-example-2" tabindex="0"';
+		
+		echo($code_html);
+	}
+
+	function cstm_scrollspy($nav_menu)
+	{
+		//	version: 12/09/2023 Bt
+		$blocks = wp_get_nav_menu_items($nav_menu, $nav_id = "navbar-example3");	?>
+		<nav id="<?php echo $nav_id ?>" class="h-100 flex-column align-items-stretch pe-4 border-end">
+			<nav class="nav nav-pills flex-column"> <?php
+		
+		foreach ($blocks as $block)
+		{
+			$blocklink = $block->post_name; ?>
+				<a class="nav-link" href="#<?= $blocklink ?>"><i class="fa-regular fa-circle"></i></a><?php
+		}?>
+			</nav>
+		</nav>
+							
+		<style>
+			.active
+			{
+				background-color: transparent !important;
+			}
+			
+			.nav-link i
+			{
+				color: #384e4d;
+				background: transparent;
+				border-radius: 100%;
+			}
+			
+			.active i
+			{
+				background: #384e4d;
+			}
+		</style>
+				<?php
+	}
+/*}*/
 
 /* Autre Fonction {*/
 /*----------------------------------------------*/
@@ -554,380 +977,263 @@
 		</script>	
 		<?php
 	}
-/*}*/
-
-
-/* Dépendance Bootstrap {
-/*----------------------------------------------*/
-/*					Carousel					*/
-/*----------------------------------------------*/
-	function cstm_carousel($args)
-	{
-		//	version: 25/09/2023 ACF Pro Bt
-	
-		$repeater		= $args['repeater'];
-		$id				= $args['id'];
-		$buttons		= $args['buttons'];
-		$multi			= $args['multi'];
-		$template		= $args['template'];
-		$colonage		= $args['colonage'];
-		$taxonomie 		= $args['taxonomie'];
-		$nombre_de_post = $args['nombre_de_post'];
-	/*{*/
-		if(!empty($taxonomie)):
-		{
-			$taxname = "";
-			
-			foreach ($taxonomie as $taxid):
-			{
-				$taxname .= get_the_category_by_ID( $taxid ).',';
-			}
-			endforeach;
-			
-			if($taxname[-1]==','):
-			{
-				$taxname = substr_replace($taxname, "",-1);
-			}
-			endif;
-			
-			$atts = array(
-				'post_type' 	=> 'post',
-				'category_name' => $taxname, 
-				'orderby' 		=> 'date', 
-				'posts_per_page'=> $nombre_de_post
-			 );
-
-		} 
-		elseif(empty($repeater)):
-		{
-			echo ('Aucun contenu. Veuillez remplir le champ ACF répéteur Objet.');
-			return;
-		}
-		endif;
-	/* Valeur par défault { */
-		if(empty($id)):
-		{
-			$id = 'carouselcustom';
-		}
-		endif;
-		if(empty($buttons)):
-		{
-			$buttons = false;
-		}
-		endif;
-		if(empty($multi)):
-		{
-			$multi = false;
-		}
-		endif;
-		if(empty($template)):
-		{
-			$template = 1;
-		}
-		endif;	
-		if(empty($colonage)):
-		{
-			$colonage = 12;
-		}
-		endif;
-	/*}*/
-	/*}*/
-
-		$othercol = 12 - $colonage;
-		
-		$counter_slide 	= 0;
-		$code_html 		= '
-			<div class="container text-center my-3">
-				<div class="row mx-auto my-auto justify-content-center">
-					<div id="'.$id.'" class="carousel slide" data-bs-ride="carousel">
-						<div class="carousel-inner" role="listbox">
-					';
-			if(!empty($atts)):
-			{		
-				$query = new WP_Query($atts);
-//				print_r($query);
-				if ( $query->have_posts() ) : 
-				{
-					while ( $query->have_posts() ) :
-					{
-						$query->the_post();
-						//-------------------------------------------------
-						$image = get_the_post_thumbnail();
-						$titre = get_the_title();
-						$description = get_the_excerpt();
-						//-------------------------------------------------
-						if($counter_slide == 0 ):
-						{ 
-							$class_indicator = "active";
-						}	
-						else:
-						{
-							$class_indicator = '';
-						}
-						endif;	
-					/* Content {*/
-						$code_html .= '
-							<div class="'.$class_indicator.' carousel-item">';
-						
-						if($template == 2):
-						{
-							$code_html .= '
-								<div class="row card" style="background: '.$background.';">
-									<div class="col-'.$colonage.' card-img">
-										<img src="'.$image.'" class="img-fluid">
-									</div>
-									<div class="card-img-overlay col-md" style="color: '.$color.';">'.$titre.'</div>
-									'.$description.'
-								</div>
-							</div>';
-						}
-						elseif($template == 1):
-						{
-							$code_html .= '
-								<div class="row" style="background: '.$background.';">
-									<div class="col-'.$colonage.'">
-										<div>
-											<img src="'.$image.'" class="img-fluid">
-										</div>
-									</div>
-									<div class="col col-'.$othercol.'" style="color: '.$color.';">
-										<h3>'.$titre.'</h3>
-										'.$description.'
-									</div>
-								</div>
-						</div>';
-						}
-						endif;
-					/*}*/
-						$counter_slide++;
-					}
-					endwhile;
-				}
-				endif;
-			}
-			else:
-			{
-				while ( have_rows('repeater') ) : 
-				the_row();
-				{
-					if( !empty(get_sub_field('image')) ):
-					{
-					//-------------------------------------------------
-						$image 		= get_sub_field('image');
-						$titre 		= get_sub_field('titre');
-						$description= get_sub_field('description');
-						$background = get_sub_field('background');
-						$color 		= get_sub_field('color');
-					//-------------------------------------------------
-						if($counter_slide == 0 ):
-						{ 
-							$class_indicator = "active";
-						}	
-						else:
-						{
-							$class_indicator = '';
-						}
-						endif;	
-					/* Content {*/
-						$code_html .= '
-							<div class="'.$class_indicator.' carousel-item">';
-						
-						if($template == 2):
-						{
-							$code_html .= '
-								<div class="row card" style="background: '.$background.';">
-									<div class="col-'.$colonage.' card-img">
-										<img src="'.$image.'" class="img-fluid">
-									</div>
-									<div class="card-img-overlay col-'.$othercol.'" style="color: '.$color.';">'.$titre.'</div>
-									'.$description.'
-								</div>
-							</div>';
-						}
-						elseif($template == 1):
-						{
-							$code_html .= '
-								<div class="row" style="background: '.$background.';">
-									<div class="col-'.$colonage.'">
-										<div>
-											<img src="'.$image.'" class="img-fluid">
-										</div>
-									</div>
-									<div class="col col-'.$othercol.'" style="color: '.$color.';">
-										<h3>'.$titre.'</h3>
-										'.$description.'
-									</div>
-								</div>
-						</div>';
-						}
-						endif;
-					/*}*/
-						$counter_slide++;
-					}
-					endif;
-					wp_reset_postdata();	   
-				}
-				endwhile;	
-			}
-			endif;
-		
-		$code_html .= '</div>';
-		
-		if($buttons):
-		{
-			$code_html .= '
-				<a class="carousel-control-prev bg-transparent w-aut button-l" href="#'.$id.'" role="button" data-bs-slide="prev">
-					<i class="fa-regular fa-circle-arrow-left" aria-hidden="true"></i>
-				</a>
-				<a class="carousel-control-next bg-transparent w-aut button-r" href="#'.$id.'" role="button" data-bs-slide="next">
-					<i class="fa-regular fa-circle-arrow-right" aria-hidden="true"></i>
-				</a>
-			';
-		}
-		endif;
-            
-		$code_html .= '</div></div></div>';
-
- 		if($multi):
-		{ 
-			$code_html .='
-			<style>
-				@media (max-width: 767px) 
-				{
-					.carousel-inner .carousel-item > div 
-					{
-						display: none;
-					}
-					.carousel-inner .carousel-item > div:first-child 
-					{
-						display: block;
-					}
-				}
-
-				.carousel-inner .carousel-item.active, .carousel-inner .carousel-item-next, .carousel-inner .carousel-item-prev 
-				{
-					display: flex;
-				}
-
-				@media (min-width: 768px) 
-				{
-					.carousel-inner .carousel-item-end.active, .carousel-inner .carousel-item-next 
-					{
-					  transform: translateX(25%);
-					}
-
-					.carousel-inner .carousel-item-start.active, .carousel-inner .carousel-item-prev 
-					{
-						transform: translateX(-25%);
-					}
-				}
-
-				.carousel-inner .carousel-item-end, .carousel-inner .carousel-item-start 
-				{ 
-				  transform: translateX(0);
-				}
-			</style>
-
-			<script>
-				let items = document.querySelectorAll(".carousel .carousel-item")
-
-				items.forEach((el) => {
-					const minPerSlide = 4
-					let next = el.nextElementSibling
-					for (var i=1; i<minPerSlide; i++) {
-						if (!next) {
-							// wrap carousel by using first child
-							next = items[0]
-						}
-						let cloneChild = next.cloneNode(true)
-						el.appendChild(cloneChild.children[0])
-						next = next.nextElementSibling
-					}
-				})
-			</script>
-			';
-		}
-		endif;
-	
-		return($code_html);
-	}
-
 
 /*------------------------------------------*/
-/*					Card					*/
+/*					Input					*/
 /*------------------------------------------*/
-	function cstm_card($title = '', $image = '', $description, $link = '#', $button = '',$test = '')
-	{
-		//	version: 12/09/2023 Bt
-	?>
-		<div class="card">
-			<div class="card__face card__face--front">
-				<img src="<?php echo($image); ?>" class="card-img-top" alt="...">
-				<div class="card-body">
-					<h6 class="card-title"><?php echo($title); ?></h6>
-					<div class="card-text row">
-						<p class='description col'><?php echo($description); ?><a href="<?php echo($link); ?>" class="btn"><?php echo $button ?></a></p>
-					</div>
-				</div>
-			</div>
-   	 		<div class="card__face card__face--back"><?= $test ?></div>
+function in_double_range($min = 0, $max = 20, $id1 = 'min', $id2 = 'max')
+{ 
+	// version : 03/11/2023
+	$code_html = '
+	<div class="range row">
+		<div class="range-slider">
+			<span class="range-selected"></span>
 		</div>
-	<?php
-	}
-
-
-/*------------------------------------------*/
-/*				Scrollspy					*/
-/*------------------------------------------*/
-	function cstm_scrollspy_start($nav_id = "navbar-example3")
-	{
-		//	version: 12/09/2023 Bt
-		$code_html = 'data-bs-spy="scroll" data-bs-target="#'.$nav_id.'" data-bs-smooth-scroll="true" data-bs-root-margin="0px 0px -50%" class="scrollspy-example-2" tabindex="0"';
-		
-		echo($code_html);
-	}
-
-	function cstm_scrollspy($nav_menu)
-	{
-		//	version: 12/09/2023 Bt
-		$blocks = wp_get_nav_menu_items($nav_menu, $nav_id = "navbar-example3");	?>
-		<nav id="<?php echo $nav_id ?>" class="h-100 flex-column align-items-stretch pe-4 border-end">
-			<nav class="nav nav-pills flex-column"> <?php
-		
-		foreach ($blocks as $block)
+		<div class="range-input col">
+			<input type="range" min="'.$min.'" max="'.$max.'" step="0.01" value='.$min.' oninput="document.getElementById(`'.$id1.'`).value = this.value">
+			<input type="range" min="'.$min.'" max="'.$max.'" step="0.01" value='.$max.'
+			oninput="document.getElementById(`'.$id2.'`).value = this.value">
+		</div>
+		<div class="range-price col">
+			<label for="min">Min</label>
+			<input type="number" class="form-control" id="'.$id1.'" name="min" min="'.$min.'" value="'.$min.'" step="0.01">
+			<label for="max">Max</label>
+			<input type="number" class="form-control" id="'.$id2.'" name="max" max="'.$max.'" value="'.$max.'" step="0.01">
+		</div>
+	</div>
+	<style>
+		.range-slider
 		{
-			$blocklink = $block->post_name; ?>
-				<a class="nav-link" href="#<?= $blocklink ?>"><i class="fa-regular fa-circle"></i></a><?php
-		}?>
-			</nav>
-		</nav>
-							
+			height: 5px;
+			position: relative;
+			background-color: #e1e9f6;
+			border-radius: 2px;
+			width: 15rem;
+			margin: auto;
+		}
+
+		.range-selected 
+		{
+			height: 100%;
+			left: 0%;
+			right: 0%;
+			position: absolute;
+			border-radius: 5px;
+			background-color: #343a40;
+		}
+
+		.range-input
+		{
+			position: relative;
+			margin: auto;
+		}
+
+		.range-input input 
+		{
+			position: absolute;
+			width: 15rem;
+			height: 5px;
+			top: -2.5px;
+			left: -15rem;
+			background: none;
+			pointer-events: none;
+			-webkit-appearance: none;
+			-moz-appearance: none;
+			
+		}
+
+		.range-input input::-webkit-slider-thumb 
+		{
+			height: 20px;
+			width: 20px;
+			border-radius: 50%;
+			border: 3px solid #343a40;
+			background-color: #fff;
+			pointer-events: auto;
+			-webkit-appearance: none;
+		}
+
+		.range-input input::-moz-range-thumb 
+		{
+			height: 15px;
+			width: 6px;
+			border-radius: 20%;
+			border: 2px solid #343a40;
+			background-color: #d1d2d8;
+			pointer-events: auto;
+			-moz-appearance: none;
+			cursor: ew-resize;
+		}
+		
+		.range-input input::-moz-range-thumb:active
+		{
+			background-color: #a0d9ed;
+		}
+
+		.range-price 
+		{
+			width: 100%;
+			display: flex;
+			align-items: center;
+			margin: 1rem 0rem;
+		}
+
+		.range-price label 
+		{
+			margin-right: 5px;
+		}
+
+		.range-price input 
+		{
+			width: 5rem;
+			padding: 5px;
+		}
+
+		.range-price input:first-of-type 
+		{
+			margin-right: 15px;
+		}
+	</style>
+<!-- Intervalle minmum entre les 2 points -->
+	<script>
+		let rangeMin = 0.01;
+		const range = document.querySelector(".range-selected");
+		const rangeInput = document.querySelectorAll(".range-input input");
+		const rangePrice = document.querySelectorAll(".range-price input");
+
+		rangeInput.forEach((input) => {
+			input.addEventListener("input", (e) => {
+				let minRange = rangeInput[0].value;
+				let maxRange = rangeInput[1].value;
+				if (maxRange - minRange < rangeMin) {
+					if (e.target.className === "min") {
+						rangeInput[0].value = maxRange - rangeMin;
+					} else {
+						rangeInput[1].value = minRange + rangeMin;
+					}
+				} else {
+					range.style.left = (minRange / rangeInput[0].max) * 100 + "%";
+					range.style.right = 100 - (maxRange / rangeInput[1].max) * 100 + "%";
+				}
+			});
+		});
+
+		rangePrice.forEach((input) => {
+			input.addEventListener("input", (e) => {
+				let minPrice = rangePrice[0].value;
+				let maxPrice = rangePrice[1].value;
+				if (maxPrice - minPrice >= rangeMin && maxPrice <= rangeInput[1].max) {
+					if (e.target.className === "min") {
+						rangeInput[0].value = minPrice;
+						range.style.left = (minPrice / rangeInput[0].max) * 100 + "%";
+					} else {
+						rangeInput[1].value = maxPrice;
+						range.style.right = 100 - (maxPrice / rangeInput[1].max) * 100 + "%";
+					}
+				}
+			});
+		});
+	</script>
+	';
+	return($code_html);
+}
+
+function in_checkbox($values, $filter)
+{
+	// version : 03/11/2023
+	$code_html ='<fieldset class="checkbox">';
+	
+	foreach( $values as $value_term ):
+	{
+		$code_html .= '
+		<div class="elements">
+			 <input type="checkbox" id="'.$value_term.'" name="'.$filter.'" value="'.$value_term.'">
+			<label for="'.$value_term.'">'.$value_term.'</label>
+		</div>';
+	}
+	endforeach;
+	
+	$code_html .= '
+		</fieldset>
+		
 		<style>
-			.active
+			.checkbox
 			{
-				background-color: transparent !important;
+				display: grid;
+				grid-template-columns: repeat(5, 1fr);
+				grid-auto-rows: minmax(0.5rem, auto);
 			}
 			
-			.nav-link i
+			.elements
 			{
-				color: #384e4d;
-				background: transparent;
-				border-radius: 100%;
-			}
-			
-			.active i
-			{
-				background: #384e4d;
+				background-color: rgba(255, 255, 255, 0.8);
+				border: 1px solid rgba(0, 0, 0, 0.8);
+				padding: 5px;
 			}
 		</style>
-				<?php
+	';
+	return($code_html);
+}
+
+function in_dropdown($values, $filter)
+{
+	// version : 03/11/2023
+	$code_html = '
+		<select id="'.$filter.'" name="'.$filter.'">
+			<option value="">-- Par défaut --</option>';
+	
+	foreach( $values as $value_term ):
+	{
+		$code_html .= '
+			<option value="'.$value_term.'">'.$value_term.'</option>';
+	}		
+	endforeach;
+	
+	$code_html .= '
+		</select>
+		
+		<style>
+			select
+			{
+				border: #d1d2d8 1px solid;
+				background: #d1d2d8;
+				border-radius: 7px;
+				color: #0a0c18;
+				padding: 0.5rem;
+				height: fit-content;
+  				margin: auto;
+			}
+		</style>
+	';
+
+	return($code_html);
+}
+
+function in_radio($values, $filter )
+{
+	// version : 03/11/2023
+	$code_html = '<fieldset>';
+	
+	foreach( $values as $value_term ):
+	{
+		$code_html .= '
+		<div>
+			<input type="radio" id="'.$value_term.'" name="'.$filter.'" value="'.$value_term.'" />
+			<label for="'.$value_term.'">'.$value_term.'</label>
+		</div>';
 	}
+	endforeach;
+	$code_html .= '</fieldset>';
+	
+	return($code_html);
+}
+
 /*}*/
 
 /* Filtre {
-/*----------------PREGET : product -----------------------------------------*/
+/*---------------- PREGET : product -----------------------------------------*/
 function productquery( $query ) {
-    //if ( ! is_admin() && $query->is_post_type_archive('product') || ! is_admin() && $query->is_tax('category_product') && $query->is_main_query() ) {
+    //if ( ! is_admin() && $query->is_post_type_archive('product') || ! is_admin() && $query->is_tax('category_product') && $query->is_main_query() ) {}
     if ( $query->is_main_query() && $query->is_post_type_archive('product') || $query->is_main_query() && $query->is_tax('category_product')  ) {
 		
 //		print_r($query);
@@ -1294,231 +1600,6 @@ function create_filter_color()
 	}
 }
 add_action('wh_hook_before_container_loop', 'create_filter_color');
-
+/*}*/
 // --------------------------------------------------------------------------
 
-function in_double_range($min = 0, $max = 20)
-{ 
-	$code_html = '
-	<div class="range row">
-		<div class="range-slider">
-			<span class="range-selected"></span>
-		</div>
-		<div class="range-input col">
-			<input type="range" min="'.$min.'" max="'.$max.'" step="0.01" value='.$min.' oninput="document.getElementById(`min`).value = this.value">
-			<input type="range" min="'.$min.'" max="'.$max.'" step="0.01" value='.$max.'
-			oninput="document.getElementById(`max`).value = this.value">
-		</div>
-		<div class="range-price col">
-			<label for="min">Min</label>
-			<input type="number" class="form-control" id="min" name="min" min="'.$min.'" value="'.$min.'" step="0.01">
-			<label for="max">Max</label>
-			<input type="number" class="form-control" id="max" name="max" max="'.$max.'" value="'.$max.'" step="0.01">
-		</div>
-	</div>
-	<style>
-		.range-slider
-		{
-			height: 5px;
-			position: relative;
-			background-color: #e1e9f6;
-			border-radius: 2px;
-			width: 15rem;
-			margin: auto;
-		}
-
-		.range-selected 
-		{
-			height: 100%;
-			left: 0%;
-			right: 0%;
-			position: absolute;
-			border-radius: 5px;
-			background-color: #343a40;
-		}
-
-		.range-input
-		{
-			position: relative;
-			margin: auto;
-		}
-
-		.range-input input 
-		{
-			position: absolute;
-			width: 15rem;
-			height: 5px;
-			top: -2.5px;
-			left: -15rem;
-			background: none;
-			pointer-events: none;
-			-webkit-appearance: none;
-			-moz-appearance: none;
-			
-		}
-
-		.range-input input::-webkit-slider-thumb 
-		{
-			height: 20px;
-			width: 20px;
-			border-radius: 50%;
-			border: 3px solid #343a40;
-			background-color: #fff;
-			pointer-events: auto;
-			-webkit-appearance: none;
-		}
-
-		.range-input input::-moz-range-thumb 
-		{
-			height: 15px;
-			width: 6px;
-			border-radius: 20%;
-			border: 2px solid #343a40;
-			background-color: #d1d2d8;
-			pointer-events: auto;
-			-moz-appearance: none;
-			cursor: ew-resize;
-		}
-		
-		.range-input input::-moz-range-thumb:active
-		{
-			background-color: #a0d9ed;
-		}
-
-		.range-price 
-		{
-			width: 100%;
-			display: flex;
-			align-items: center;
-			margin: 1rem 0rem;
-		}
-
-		.range-price label 
-		{
-			margin-right: 5px;
-		}
-
-		.range-price input 
-		{
-			width: 5rem;
-			padding: 5px;
-		}
-
-		.range-price input:first-of-type 
-		{
-			margin-right: 15px;
-		}
-	</style>
-<!-- Intervalle minmum entre les 2 points -->
-	<script>
-		let rangeMin = 0.01;
-		const range = document.querySelector(".range-selected");
-		const rangeInput = document.querySelectorAll(".range-input input");
-		const rangePrice = document.querySelectorAll(".range-price input");
-
-		rangeInput.forEach((input) => {
-			input.addEventListener("input", (e) => {
-				let minRange = rangeInput[0].value;
-				let maxRange = rangeInput[1].value;
-				if (maxRange - minRange < rangeMin) {
-					if (e.target.className === "min") {
-						rangeInput[0].value = maxRange - rangeMin;
-					} else {
-						rangeInput[1].value = minRange + rangeMin;
-					}
-				} else {
-					range.style.left = (minRange / rangeInput[0].max) * 100 + "%";
-					range.style.right = 100 - (maxRange / rangeInput[1].max) * 100 + "%";
-				}
-			});
-		});
-
-		rangePrice.forEach((input) => {
-			input.addEventListener("input", (e) => {
-				let minPrice = rangePrice[0].value;
-				let maxPrice = rangePrice[1].value;
-				if (maxPrice - minPrice >= rangeMin && maxPrice <= rangeInput[1].max) {
-					if (e.target.className === "min") {
-						rangeInput[0].value = minPrice;
-						range.style.left = (minPrice / rangeInput[0].max) * 100 + "%";
-					} else {
-						rangeInput[1].value = maxPrice;
-						range.style.right = 100 - (maxPrice / rangeInput[1].max) * 100 + "%";
-					}
-				}
-			});
-		});
-	</script>
-	';
-	return($code_html);
-}
-
-function in_checkbox($shapes)
-{
-	$code_html ='<div class="checkbox">';
-	
-	foreach( $shapes as $shape_term ):
-	{ 
-		$code_html .= '
-		<div class="elements">
-			 <input type="checkbox" id="'.$shape_term.'" name="shape" value="'.$shape_term.'">
-			<label for="'.$shape_term.'">'.$shape_term.'</label>
-		</div>';
-	}
-	endforeach;
-	
-	$code_html .= '
-		</div>
-		
-		<style>
-			.checkbox
-			{
-				display: grid;
-				grid-template-columns: repeat(5, 1fr);
-				grid-auto-rows: minmax(0.5rem, auto);
-			}
-			
-			.elements
-			{
-				background-color: rgba(255, 255, 255, 0.8);
-				border: 1px solid rgba(0, 0, 0, 0.8);
-				padding: 5px;
-			}
-		</style>
-	';
-	return($code_html);
-}
-
-function in_dropdown($shapes)
-{
-	$code_html = '
-		<select id="shape" name="shape">
-			<option value="">-- Par défaut --</option>';
-	
-	foreach( $shapes as $shape_term ):
-	{
-		$code_html .= '
-			<option value="'.$shape_term.'">'.$shape_term.'</option>';
-	}		
-	endforeach;
-	
-	$code_html .= '
-		</select>
-		
-		<style>
-			select
-			{
-				border: #d1d2d8 1px solid;
-				background: #d1d2d8;
-				border-radius: 7px;
-				color: #0a0c18;
-				padding: 0.5rem;
-				height: fit-content;
-  				margin: auto;
-			}
-		</style>
-	';
-
-	return($code_html);
-}
-/*}*/
