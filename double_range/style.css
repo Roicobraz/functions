@@ -1,0 +1,84 @@
+.range 
+		{
+/*			margin-left: 30vw;*/
+		}
+	
+		.range-selected 
+		{
+			height: 100%;
+			position: absolute;
+			left: 0%;
+			right: 0%;
+			border-radius: 5px;
+			background-color: #343a40;
+		}
+		
+		.range-slider
+		{
+			height: 5px;
+			position: relative;
+			background-color: #e1e9f6;
+			border-radius: 2px;
+			width: 30vw;
+			margin: auto;
+		}
+
+		.range-input
+		{
+			position: relative;
+			margin: auto;
+		}
+
+		.range-input input 
+		{
+			position: absolute;
+			width: 30vw;
+			height: 5px;
+			background: none;
+			border: none;
+			pointer-events: none;
+			-webkit-appearance: none;
+			-moz-appearance: none;
+		}
+	
+		.range-input input::-webkit-slider-thumb, .range-input input::-moz-range-thumb 
+		{
+			-webkit-appearance: none;
+			-moz-appearance: none;
+			height: 15px;
+			width: 6px;
+			border-radius: 20%;
+			border: 2px solid #343a40;
+			background-color: #d1d2d8;
+			pointer-events: auto;
+			cursor: ew-resize;
+		}
+		
+		.range-input input::-moz-range-thumb:active
+		{
+			background-color: #a0d9ed;
+		}
+
+		.range-price 
+		{
+			width: 100%;
+			display: flex;
+			align-items: center;
+			margin: 1rem 0rem;
+		}
+
+		.range-price label 
+		{
+			margin-right: 5px;
+		}
+
+		.range-price input 
+		{
+			width: 5rem;
+			padding: 5px;
+		}
+
+		.range-price input:first-of-type 
+		{
+			margin-right: 15px;
+		}			
