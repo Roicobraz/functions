@@ -32,11 +32,11 @@ rangeInput.forEach((input) => {
 	input.addEventListener("input", (e) => {
 		const minRange = rangeInput[0].value; /* valeur du 1er range */
 		const maxRange = rangeInput[1].value; /* valeur du 2nd range */
-		const diff = rangeInput[0].max - rangeInput[0].min;
+		let diff = rangeInput[0].max - rangeInput[0].min;
 
 		if (maxRange - minRange < rangeMin) /* check de l'intervalle entre les 2 points */
 		{
-			if (e.target.className === "min") /* l'élément ciblé a la classe min */
+			if (e.target.className.includes("min")) /* l'élément ciblé a la classe min */
 			{
 				rangeInput[0].value = maxRange - rangeMin;
 			} 
@@ -60,10 +60,11 @@ rangeInput.forEach((input) => {
 
 rangePrice.forEach((input) => {
 	input.addEventListener("input", (e) => {
-		let minPrice = rangePrice[0].value; /* valeur du 1er number */
-		let maxPrice = rangePrice[1].value; /* valeur du 2nd range */
+		const minPrice = rangePrice[0].value; /* valeur du 1er number */
+		const maxPrice = rangePrice[1].value; /* valeur du 2nd range */
+		
 		if (maxPrice - minPrice >= rangeMin && maxPrice <= rangeInput[1].max) {
-			if (e.target.className === "min") {
+			if (e.target.className.includes("min")) {
 				rangeInput[0].value = minPrice;
 				range.style.left = (minPrice / rangeInput[0].max) * 100 + "%";
 			} else {
@@ -71,9 +72,10 @@ rangePrice.forEach((input) => {
 				range.style.right = 100 - (maxPrice / rangeInput[1].max) * 100 + "%";
 			}
 		}
-		if(minPrice > maxPrice)
+		
+		if(Number(minPrice) > Number(maxPrice))
 	   	{
-			rangePrice[1].value = Number(minPrice) + rangeMin;
+			rangePrice[1].value = Number(rangePrice[0].value) + rangeMin;
 		}
 	});
 });
