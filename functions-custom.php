@@ -245,18 +245,19 @@
 /*----------------------------------------------*/
 /*					Carousel					*/
 /*----------------------------------------------*/
-	function bs_carousel($args)
+function bs_carousel($args)
 	{
-		//	version: 25/09/2023 ACF Pro Bt
+		//	version: 05/01/2024 ACF Pro Bt
 	
-		$repeater		= $args['repeater'];
-		$id				= $args['id'];
-		$buttons		= $args['buttons'];
-		$multi			= $args['multi'];
-		$template		= $args['template'];
-		$colonage		= $args['colonage'];
-		$taxonomie 		= $args['taxonomie'];
-		$nombre_de_post = $args['nombre_de_post'];
+		if(!empty($args['repeater']))		{$repeater 			= $args['repeater'];}
+		if(!empty($args['id']))				{$id 				= $args['id'];}
+		if(!empty($args['buttons']))		{$buttons			= $args['buttons'];}
+		if(!empty($args['multi']))			{$multi 			= $args['multi'];}
+		if(!empty($args['template']))		{$template 			= $args['template'];}
+		if(!empty($args['colonage']))		{$colonage 			= $args['colonage'];}
+		if(!empty($args['taxonomie']))		{$taxonomie 		= $args['taxonomie'];}
+		if(!empty($args['nombre_de_post']))	{$nombre_de_post 	= $args['nombre_de_post'];}
+		
 	/*{*/
 		if(!empty($taxonomie)):
 		{
@@ -284,7 +285,7 @@
 		} 
 		elseif(empty($repeater)):
 		{
-			echo ('Aucun contenu. Veuillez remplir le champ ACF répéteur Objet.');
+			echo ('<strong>&#9888; Aucun contenu.</strong> Veuillez remplir le champ ACF répéteur Objet.');
 			return;
 		}
 		endif;
