@@ -10,6 +10,7 @@
 **/
 	const id_js = 'darkmod-js';
 	const darkmod_css_path = '/inc/darkmod/darkmod.css';
+	const creating_link_css = true;
 
 	/**
 	* mod par défaut 
@@ -53,22 +54,27 @@
 		return decodeURI(dc.substring(begin + prefix.length, end));
 	} 
 
-	function setDarkcss(filelink)
+	function setDarkcss(active, filelink)
 	{
-		link = document.createElement('link');
-		link.rel = 'stylesheet';
-		link.id = 'darkmod';
-		filelink = filelink.replace('/inc/darkmod/darkmod.js?ver=1.0.0', darkmod_css_path)
-		link.href = filelink;
-		document.head.appendChild(link);
+		if(active)
+		{
+			link = document.createElement('link');
+			link.rel = 'stylesheet';
+			link.id = 'darkmod';
+			filelink = filelink.replace('/inc/darkmod/darkmod.js?ver=1.0.0', darkmod_css_path)
+			link.href = filelink;
+			document.head.appendChild(link);
+		}
 	}
 	
-	function removeDarkcss()
+	function removeDarkcss(active)
 	{
-
-		linkremove = document.querySelector(`link[id~="darkmod"]`);
-		if (linkremove)
-		linkremove.remove();
+		if(active)
+		{
+			linkremove = document.querySelector(`link[id~="darkmod"]`);
+			if (linkremove)
+			linkremove.remove();
+		}
 	}
 
 	/**
@@ -161,14 +167,14 @@
 			document.cookie = 'dk_switcher_value=1; expires="+date+"; Secure; SameSite=None";';			
 			setTheme('dark');
 			setimages('dark');
-			setDarkcss(geturi());
+			setDarkcss(creating_link_css, geturi());
 		}
 		else
 		{
 			document.cookie = 'dk_switcher_value=0; expires="+date+"; Secure; SameSite=None";';			
 			setTheme('light');
 			setimages('light');
-			removeDarkcss();
+			removeDarkcss(creating_link_css);
 		}
 	}
 	
@@ -189,7 +195,7 @@
 		if(switcher.checked == true)
 		{
 			mod = 'dark';
-			setDarkcss(geturi());
+			setDarkcss(creating_link_css, geturi());
 		}
 		else
 		{
@@ -199,12 +205,12 @@
 	else if (getCookie("dk_switcher_value") && getCookie('dk_switcher_value')==1)
 	{
 		mod = 'dark';
-		setDarkcss(geturi());
+		setDarkcss(creating_link_css, geturi());
 	}
 	else
 	{
 		mod = 'light';
-		removeDarkcss();
+		removeDarkcss(creating_link_css, );
 	}
 	setTheme(mod);
 	setimages(mod);
