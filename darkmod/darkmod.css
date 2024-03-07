@@ -1,0 +1,5 @@
+/* Dark Mod {*/
+/* line 4, ../sass/darkmod.scss */
+[data-bs-theme="dark"] body {
+  background: black;
+}
