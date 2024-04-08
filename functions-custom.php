@@ -668,6 +668,58 @@ function bs_carousel($args)
 
 /* Autre Fonction {*/
 /*----------------------------------------------*/
+/*				Replace dans la db				*/
+/*----------------------------------------------*/
+function migratedb($urls, $new_urls, $db)
+{	
+	//	version : 08/04/2024
+	/**
+	* Nomenclature des tableaux : 
+	* http, https, chemin des fichiers
+	* 
+	* Les deux tableaux doivent avoir la même taille et chaque paire à la même place
+	*
+	* $urls = array(
+	* 	'http://www.xxx.fr/', 
+	* 	'http://www.xxx.fr', 
+	* 	'https://www.xxx.fr/', 
+	* 	'https://www.xxx.fr', 
+	* 	'/home/xxx/www'
+	* );
+	* 
+	* $new_urls = array(
+	* 	'https://serveur.com/xxx/', 
+	* 	'https://serveur.com/xxx', 
+	* 	'https://serveur.com/xxx/', 
+	* 	'https://serveur.com/xxx', 
+	* 	'/volume/web/xxx'
+	* );
+	* 
+	* $db  = 'nom_de_la_db';
+	*/
+
+	$gettable_name = $this->executerRequete("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='$db'");
+	$gettable_name = $gettable_name->fetchAll(); 
+
+	foreach($gettable_name as $table)
+	{
+		$getcolumn_name = $this->executerRequete("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='$db' and TABLE_NAME='$table[0]'");
+		$getcolumn_name = $getcolumn_name->fetchAll(); 
+
+		foreach($getcolumn_name as $column)
+		{	
+			if(!str_contains($table[0], 'cmplz_'))
+			{					
+				for($i=0; $i < count($urls); $i++)
+				{
+					$replace_urls = $this->executerRequete("UPDATE $db.$table[0] SET $column[0] = REPLACE($column[0], '$urls[$i]', '$new_urls[$i]') /*WHERE TABLE_SCHEMA='$db'*/");
+				}				
+			}
+		}
+	}		
+}
+
+/*----------------------------------------------*/
 /*					Avoir un âge				*/
 /*----------------------------------------------*/
 	function cstm_age($date_created = 0 )
