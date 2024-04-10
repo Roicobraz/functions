@@ -1,0 +1,8 @@
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteCond %{HTTP_HOST} !^synology. [NC]
+RewriteRule .? https://synology.pagedemarque.com/justinsandbox/signature%{REQUEST_URI} [R=301,L]
+RewriteRule ^custom_signature$ ?action=custom_signature
+RewriteRule ^admin$ ?action=admin
+#RewriteRule ^article-(.*).php$ index.php?mapage=article&monarticle=$1
+</IfModule>
